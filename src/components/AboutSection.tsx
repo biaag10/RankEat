@@ -1,12 +1,12 @@
 import React from 'react';
-// import developer1 from './assets/developer1.jpg';  // Substitua com o caminho correto
-// import developer2 from './assets/developer2.jpg';  // Substitua com o caminho correto
-// import developer3 from './assets/developer3.jpg';  // Substitua com o caminho correto
-// import developer4 from './assets/developer4.jpg';  // Substitua com o caminho correto
+ import developer1 from '../assets/Pedro.png';  // Substitua com o caminho correto
+ import developer2 from '../assets/Rafael.png';  // Substitua com o caminho correto
+ import developer3 from '../assets/Julia.png';  // Substitua com o caminho correto
+ import developer4 from '../assets/Bia.png';  // Substitua com o caminho correto
 
 const AboutSection = () => {
   return (
-    <section className="bg-[#B54141] text-white py-12 mt-20">
+    <section className="bg-gradient-to-b from-red-500 via-red-700 to-[#8a0500] text-white py-12 mt-20 rounded-tl-[100px] rounded-tr-[100px]">
         
       <div className="text-center">
         {/* Títulos */}
@@ -22,20 +22,20 @@ const AboutSection = () => {
         {/* Desenvolvedores */}
         <div className="flex justify-center gap-6">
           <div className="text-center">
-            {/* <img src={developer1} alt="Julia Ierseve" className="w-24 h-24 rounded-full mb-2" /> */}
+            <img src={developer4} alt="Julia Ierseve" className="w-24 h-24 rounded-full mb-2" /> 
+            <p>Bianca Andrade</p>
+          </div>
+          <div className="text-center">
+             <img src={developer3} alt="Rafael Althabia" className="w-24 h-24 rounded-full mb-2" /> 
             <p>Julia Ierseve</p>
           </div>
           <div className="text-center">
-            {/* <img src={developer2} alt="Rafael Althabia" className="w-24 h-24 rounded-full mb-2" /> */}
-            <p>Rafael Althabia</p>
-          </div>
-          <div className="text-center">
-            {/* <img src={developer3} alt="Pedro Lima" className="w-24 h-24 rounded-full mb-2" /> */}
+             <img src={developer1} alt="Pedro Lima" className="w-24 h-24 rounded-full mb-2" /> 
             <p>Pedro Lima</p>
           </div>
           <div className="text-center">
-            {/* <img src={developer4} alt="Bianca Andrade" className="w-24 h-24 rounded-full mb-2" /> */}
-            <p>Bianca Andrade</p>
+             <img src={developer2} alt="Bianca Andrade" className="w-24 h-24 rounded-full mb-2" /> 
+            <p>Rafael Althabia</p>
           </div>
         </div>
       </div>
