@@ -1,128 +1,98 @@
+// src/App.tsx
+
 import React, { useState } from 'react';
-import Header from './componentes/Header';
-import './App.css';
+import axios from 'axios';
 
 const App: React.FC = () => {
-  const [cep, setCep] = useState<string>('');
-  const [logradouro, setLogradouro] = useState<string>('');
-  const [bairro, setBairro] = useState<string>('');
-  const [cidade, setCidade] = useState<string>('');
-  const [estado, setEstado] = useState<string>('');
-  const [restaurantes, setRestaurantes] = useState<any[]>([]);
+  const [cep, setCep] = useState('');
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCep(e.target.value);
-  };
+  const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc='; // Sua chave da Foursquare API
 
-  const fetchAddress = async () => {
-    if (cep.length !== 8) {
-      setError('CEP deve ter 8 caracteres');
+  const buscarRestaurantesPorCep = async () => {
+    if (!cep) {
+      alert('Por favor, insira o CEP.');
       return;
     }
 
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await response.json();
+      // Converte o CEP em coordenadas com a OpenStreetMap (Nominatim)
+      const response = await axios.get(`https://nominatim.openstreetmap.org/search?postalcode=${cep}&format=json`);
+      const data = response.data;
 
-      if (data.erro) {
-        setError('CEP não encontrado');
-        setLogradouro('');
-        setBairro('');
-        setCidade('');
-        setEstado('');
+      if (data.length > 0) {
+        const latitude = data[0].lat;
+        const longitude = data[0].lon;
+        buscarRestaurantes(latitude, longitude);
       } else {
-        setLogradouro(data.logradouro);
-        setBairro(data.bairro);
-        setCidade(data.localidade);
-        setEstado(data.uf);
-        setError('');
-        // Buscar restaurantes após o CEP válido
-        fetchRestaurants(data);
+        setError('Não foi possível encontrar as coordenadas para esse CEP.');
       }
     } catch (error) {
-      setError('Erro ao buscar endereço');
+      console.error('Erro ao buscar coordenadas do CEP:', error);
+      setError('Ocorreu um erro ao buscar o CEP.');
     }
   };
 
-  const fetchRestaurants = async (data: any) => {
-    setLoading(true);
-
+  const buscarRestaurantes = async (latitude: string, longitude: string) => {
     try {
-      const geocodeResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${data.logradouro},${data.bairro},${data.localidade},${data.uf}&key=AIzaSyBk9Wnjn1TOr9dJeAkNWUcwaiiCwBSSGxM`
-      );
-      const geocodeData = await geocodeResponse.json();
-      const location = geocodeData.results[0]?.geometry.location;
+      const response = await axios.get(`https://api.foursquare.com/v3/places/search?ll=${latitude},${longitude}&radius=1000&limit=5&categories=13065`, {
+        headers: {
+          'Authorization': apiKeyFoursquare
+        }
+      });
 
-      if (location) {
-        const { lat, lng } = location;
-        const placesResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=restaurant&key=AIzaSyBk9Wnjn1TOr9dJeAkNWUcwaiiCwBSSGxM`
-        );
-        const placesData = await placesResponse.json();
-        setRestaurantes(placesData.results);
+      if (response.data.results.length > 0) {
+        setRestaurants(response.data.results);
       } else {
-        setError('Não foi possível obter as coordenadas do endereço');
+        setRestaurants([]);
+        setError('Nenhum restaurante encontrado nas proximidades.');
       }
     } catch (error) {
-      setError('Erro ao buscar restaurantes');
-    } finally {
-      setLoading(false);
+      console.error('Erro ao buscar restaurantes:', error);
+      setError('Ocorreu um erro ao buscar os restaurantes.');
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchAddress();
   };
 
   return (
-    <>
-    
+    <div className="min-h-screen flex flex-col items-center justify-center p-5 bg-gray-100">
+      <h1 className="text-3xl font-bold mb-4">Buscar Restaurantes por CEP</h1>
 
-    <div className="App">
-      
-      <h1>Consulta de CEP e Restaurantes</h1>
-      <form onSubmit={handleSubmit}>
+      <div className="w-full max-w-md">
+        <label htmlFor="cep" className="block text-lg mb-2">Digite o CEP:</label>
         <input
           type="text"
-          placeholder="Digite o CEP"
+          id="cep"
           value={cep}
-          onChange={handleCepChange}
-          maxLength={8}
+          onChange={(e) => setCep(e.target.value)}
+          placeholder="Ex: 01001000"
+          className="w-full p-2 border border-gray-300 rounded-md mb-4"
         />
-        <button type="submit">Buscar</button>
-      </form>
 
-      {error && <p className="error">{error}</p>}
+        <button
+          onClick={buscarRestaurantesPorCep}
+          className="w-full p-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          Buscar Restaurantes
+        </button>
+      </div>
 
-      {logradouro && (
-        <div className="address-info">
-          <p><strong>Rua:</strong> {logradouro}</p>
-          <p><strong>Bairro:</strong> {bairro}</p>
-          <p><strong>Cidade:</strong> {cidade}</p>
-          <p><strong>Estado:</strong> {estado}</p>
-        </div>
-      )}
+      {error && <div className="mt-4 text-red-500">{error}</div>}
 
-      {loading && <p>Carregando restaurantes...</p>}
-
-      <div className="restaurant-list">
-        {restaurantes.length > 0 ? (
-          restaurantes.map((restaurant: any, index: number) => (
-            <div className="restaurant-card" key={index}>
-              <h4>{restaurant.name}</h4>
-              <p>{restaurant.vicinity}</p>
+      <div id="results" className="mt-6 w-full max-w-md">
+        {restaurants.length > 0 ? (
+          restaurants.map((restaurant) => (
+            <div key={restaurant.fsq_id} className="p-4 bg-white rounded-md shadow-md mb-4">
+              <h3 className="text-xl font-semibold">{restaurant.name}</h3>
+              <p><strong>Endereço:</strong> {restaurant.location.address || 'Não disponível'}</p>
+              <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat: any) => cat.name).join(', ') : 'Não disponível'}</p>
             </div>
           ))
         ) : (
-          !loading && <p>Nenhum restaurante encontrado.</p>
+          <p className="text-gray-500">Nenhum restaurante encontrado.</p>
         )}
       </div>
     </div>
-    </>
   );
 };
 
