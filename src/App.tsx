@@ -2,7 +2,7 @@ import './styles/main.css';
 import { useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { useState } from 'react';
-import logo from './assets/logo.png';
+import logo from './assets/logo.png'; 
 
 // Componente de Pesquisa de CEP
 const SearchComponent = () => {
