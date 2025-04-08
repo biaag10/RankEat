@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+body {
+    font-family: 'Reddit Sans Condensed', sans-serif;
+  }
+  
+  .font-RubikDoodleShadow {
+    font-family: 'Rubik Doodle Shadow', cursive;
+  }

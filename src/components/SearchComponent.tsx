@@ -9,7 +9,7 @@ const SearchComponent = () => {
   };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-white">
+    <div className="w-full flex items-center justify-center bg-white mt-10 mb-20">
       <div className="w-[90%] sm:w-[700px] h-[120px] relative bg-white shadow-lg rounded-md overflow-hidden flex items-center justify-between p-2">
         <input
           type="text"
