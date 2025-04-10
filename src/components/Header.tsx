@@ -14,7 +14,7 @@ const Header = () => {
           src={logo}
           alt="Logo"
           className="w-24 h-20 p-2 cursor-pointer"
-          onClick={() => navigate('/')} // Redireciona para Home ao clicar na logo
+          onClick={() => navigate('/App.tsx')} // Redireciona para Home ao clicar na logo
         />
       </div>
 
@@ -32,14 +32,14 @@ const Header = () => {
         </button>
       </nav>
 
-      {/* Menu Mobile */}
+      {/* Menu Mobile 
       {isOpen && (
         <div className="sm:hidden bg-[#8A0500] p-4 text-white">
           <ul>
             <li className="py-2 text-lg">Sobre</li>
           </ul>
-        </div>
-      )}
+        </div> 
+      )} */}
     </header>
   );
 };

@@ -3,7 +3,7 @@ import github from '../assets/github.png';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#8A0500] text-white py-4 w-full">
+    <footer className="bg-[#8A0500] text-white py-4 w-full bottom-0">
       <div className="flex justify-center gap-6 items-center">
         {/* Desenvolvedores com links do GitHub */}
         <a
