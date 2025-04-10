@@ -1,13 +1,12 @@
-import developer1 from '../assets/Pedro.png';  
-import developer2 from '../assets/Rafael.png'; 
-import developer3 from '../assets/Julia.png'; 
-import developer4 from '../assets/Bia.png';  
+import React from 'react';
+import developer1 from '../assets/Pedro.png';  // Substitua com o caminho correto
+import developer2 from '../assets/Rafael.png';  // Substitua com o caminho correto
+import developer3 from '../assets/Julia.png';  // Substitua com o caminho correto
+import developer4 from '../assets/Bia.png';  // Substitua com o caminho correto
 
 const AboutSection = () => {
   return (
-    
     <section id="sobre" className="bg-gradient-to-b from-red-500 via-red-700 to-[#8a0500] text-white py-12 mt-20 rounded-tl-[100px] rounded-tr-[100px]">
-        
       <div className="text-center">
         {/* Títulos */}
         <h2 className="text-4xl font-bold font-RubikDoodleShadow mb-4">Sobre</h2>
@@ -17,29 +16,28 @@ const AboutSection = () => {
           O RankEat é um site feito para te ajudar a descobrir os melhores lugares para comer perto de você. Basta informar seu CEP, e nós mostramos um ranking com os restaurantes mais bem avaliados da região. Nosso objetivo é tornar a escolha do próximo lugar para comer mais rápida, prática e indicada.
         </p>
 
-
         <h3 className="text-3xl font-bold font-RubikDoodleShadow mb-8">Desenvolvedores</h3>
+        
         {/* Desenvolvedores */}
-        <div className="flex justify-center gap-6">
-          <div className="text-center">
-            <img src={developer4} alt="Julia Ierseve" className="w-24 h-24 rounded-full mb-2" /> 
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-4">
+          <div className="text-center sm:w-1/2 md:w-auto">
+            <img src={developer4} alt="Julia Ierseve" className="w-24 h-24 rounded-full mb-2" />
             <p>Bianca Andrade</p>
           </div>
-          <div className="text-center">
-             <img src={developer3} alt="Rafael Althabia" className="w-24 h-24 rounded-full mb-2" /> 
-            <p>Julia Iervese</p>
+          <div className="text-center sm:w-1/2 md:w-auto">
+            <img src={developer3} alt="Rafael Althabia" className="w-24 h-24 rounded-full mb-2" />
+            <p>Julia Ierseve</p>
           </div>
-          <div className="text-center">
-             <img src={developer1} alt="Pedro Lima" className="w-24 h-24 rounded-full mb-2" /> 
+          <div className="text-center sm:w-1/2 md:w-auto">
+            <img src={developer1} alt="Pedro Lima" className="w-24 h-24 rounded-full mb-2" />
             <p>Pedro Lima</p>
           </div>
-          <div className="text-center">
-             <img src={developer2} alt="Bianca Andrade" className="w-24 h-24 rounded-full mb-2" /> 
+          <div className="text-center sm:w-1/2 md:w-auto">
+            <img src={developer2} alt="Bianca Andrade" className="w-24 h-24 rounded-full mb-2" />
             <p>Rafael Althabia</p>
           </div>
         </div>
       </div>
-      
     </section>
   );
 };
