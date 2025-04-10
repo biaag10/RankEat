@@ -2,9 +2,26 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 
+// Tipos específicos para a resposta da API
+interface Restaurante {
+  fsq_id: string;
+  name: string;
+  location: {
+    address: string;
+  };
+  categories: { name: string }[];
+  distance: number;
+  geocodes?: {
+    main?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+}
+
 const SearchRestaurants: React.FC = () => {
   const [cep, setCep] = useState<string>('');
-  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurante[]>([]);
   const [error, setError] = useState<string>('');
   const [cepError, setCepError] = useState<string>('');
 
@@ -111,7 +128,7 @@ const SearchRestaurants: React.FC = () => {
       <div id="results" className="mt-6 w-full max-w-md">
         {restaurants.length > 0 ? (
           <div className="space-y-4">
-            {restaurants.map((restaurant: any) => {
+            {restaurants.map((restaurant: Restaurante) => {
               const lat = restaurant.geocodes?.main?.latitude;
               const lng = restaurant.geocodes?.main?.longitude;
               const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
@@ -129,7 +146,7 @@ const SearchRestaurants: React.FC = () => {
                     <FaMapMarkerAlt className="text-red-600 transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1" />
                     </div>
                   <p><strong>Endereço:</strong> {restaurant.location.address || 'Não disponível'}</p>
-                  <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat: any) => cat.name).join(', ') : 'Não disponível'}</p>
+                  <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat) => cat.name).join(', ') : 'Não disponível'}</p>
                   <p><strong>Distância:</strong> {(restaurant.distance / 1000).toFixed(2)} km</p>
                 </a>
               );
