@@ -27,7 +27,7 @@ const AboutSection = () => {
           </div>
           <div className="text-center">
              <img src={developer3} alt="Rafael Althabia" className="w-24 h-24 rounded-full mb-2" /> 
-            <p>Julia Ierseve</p>
+            <p>Julia Iervese</p>
           </div>
           <div className="text-center">
              <img src={developer1} alt="Pedro Lima" className="w-24 h-24 rounded-full mb-2" /> 

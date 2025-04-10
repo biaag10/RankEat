@@ -1,54 +1,56 @@
-# React + TypeScript + Vite
+# RankEat - Projeto
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**RankEat** é um site feito para ajudar usuários a descobrirem lugares para comer nas proximidades com base no CEP. O projeto usa **React**, **TypeScript**, **Vite** e integra com as APIs **Google Geocoding** e **Foursquare** para fornecer informações sobre restaurantes.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tecnologias Usadas
 
-## Expanding the ESLint configuration
+- **React**: Framework para a construção de interfaces de usuário.
+- **TypeScript**: Superset de JavaScript que adiciona tipagem estática.
+- **Vite**: Ferramenta de construção de frontend com suporte a Hot Module Replacement (HMR).
+- **Tailwind CSS**: Framework para estilização utilitária.
+- **Foursquare API**: Usada para obter informações sobre restaurantes.
+- **Google Geocoding API**: Usada para converter o CEP em coordenadas geográficas (latitude e longitude).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Instalação
+
+### 1. Clonar o Repositório
+
+```bash
+git clone https://github.com/biaag10/RankEat.git
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Instalar Dependências
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Depois de clonar o repositório, instale as dependências com o npm:
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+npm install
 ```
+
+### 3. Rodar o Projeto
+
+- Após a instalação, rode o projeto localmente com o comando:
+
+```bash
+npm run dev
+```
+
+- O projeto estará disponível em 'http://localhost:5173/' (por padrão)
+
+
+## Deploy na Vercel
+
+- O projeto está hospedado na Vercel. Você pode acessar a versão online do RankEat clicando no link abaixo:
+
+'https://rank-eat.vercel.app/'
+
+
+## Autores
+
+Bianca Andrade Galvão (Git: https://github.com/biaag10)
+Júlia Batista Iervese (Git: https://github.com/juliaiervese)
+Pedro Lima Almeida Santos	(Git: https://github.com/PPedrinho)
+Rafael Athaliba Bomfim Fraga (Git: https://github.com/athaliba)
+

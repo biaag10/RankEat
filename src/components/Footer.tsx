@@ -31,7 +31,7 @@ const Footer = () => {
             alt="Julia Ierseve"
             className="w-12 h-12 rounded-full"
           />
-          <p className="text-sm">Julia Ierseve</p>
+          <p className="text-sm">Julia Iervese</p>
         </a>
 
         <a
