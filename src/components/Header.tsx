@@ -1,10 +1,7 @@
-import { useState } from 'react';
-import { FaBars, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png'; 
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(false); 
   const navigate = useNavigate(); 
 
   return (
@@ -28,24 +25,7 @@ const Header = () => {
         }}
         className="text-white text-xl font-bold pr-4 cursor-pointer hover:text-red-300 transition-colors">SOBRE
       </button>
-
-        {/* Ícone do menu para telas móveis */}
-        <button
-          className="text-[#ffffff] sm:hidden ml-4"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-        </button>
       </nav>
-
-      {/* Menu Mobile 
-      {isOpen && (
-        <div className="sm:hidden bg-[#8A0500] p-4 text-white">
-          <ul>
-            <li className="py-2 text-lg">Sobre</li>
-          </ul>
-        </div> 
-      )} */}
     </header>
   );
 };
