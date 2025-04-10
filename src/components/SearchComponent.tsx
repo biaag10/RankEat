@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { FaMapMarkerAlt } from 'react-icons/fa';
 
 const SearchRestaurants: React.FC = () => {
   const [cep, setCep] = useState<string>('');
@@ -7,10 +8,9 @@ const SearchRestaurants: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [cepError, setCepError] = useState<string>('');
 
-  const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc='; // Sua chave da Foursquare API
-  const apiKeyGeocoding = 'AIzaSyBJaZFuZvi8axZBiwxYeEumv4gMP0ti54o'; // Sua chave da Geocoding API
+  const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc='; // Foursquare API
+  const apiKeyGeocoding = 'AIzaSyBJaZFuZvi8axZBiwxYeEumv4gMP0ti54o'; // Google Geocoding API
 
-  // Função para validar o CEP
   const validarCep = (inputCep: string) => {
     const cepRegex = /^[0-9]{8}$/;
     if (!cepRegex.test(inputCep)) {
@@ -26,6 +26,9 @@ const SearchRestaurants: React.FC = () => {
   };
 
   const buscarRestaurantesPorCep = async () => {
+    setError('');
+    setRestaurants([]);
+
     if (!cep) {
       alert('Por favor, insira o CEP.');
       return;
@@ -36,13 +39,11 @@ const SearchRestaurants: React.FC = () => {
     }
 
     try {
-      // Converte o CEP em coordenadas com a API de Geocoding do Google
       const geocodingEndpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${cep}&key=${apiKeyGeocoding}`;
-
       const geocodingResponse = await axios.get(geocodingEndpoint);
       const data = geocodingResponse.data;
 
-      if (data.status === "OK" && data.results.length > 0) {
+      if (data.status === 'OK' && data.results.length > 0) {
         const latitude = data.results[0].geometry.location.lat;
         const longitude = data.results[0].geometry.location.lng;
         buscarRestaurantes(latitude, longitude);
@@ -61,12 +62,13 @@ const SearchRestaurants: React.FC = () => {
 
       const response = await axios.get(endpoint, {
         headers: {
-          'Authorization': apiKeyFoursquare
-        }
+          Authorization: apiKeyFoursquare,
+        },
       });
 
       if (response.data.results.length > 0) {
         setRestaurants(response.data.results);
+        setError('');
       } else {
         setRestaurants([]);
         setError('Nenhum restaurante encontrado nas proximidades.');
@@ -82,7 +84,9 @@ const SearchRestaurants: React.FC = () => {
       <h1 className="text-3xl font-bold mb-4">Buscar Restaurantes por CEP</h1>
 
       <div className="w-full max-w-md">
-        <label htmlFor="cep" className="block text-lg mb-2">Digite o CEP:</label>
+        <label htmlFor="cep" className="block text-lg mb-2">
+          Digite o CEP:
+        </label>
         <input
           type="text"
           id="cep"
@@ -107,18 +111,32 @@ const SearchRestaurants: React.FC = () => {
       <div id="results" className="mt-6 w-full max-w-md">
         {restaurants.length > 0 ? (
           <div className="space-y-4">
-            {restaurants.map((restaurant: any) => (
-              <div key={restaurant.fsq_id} className="p-4 bg-white rounded-md shadow-md border-2 border-red-600">
-                <h3 className="text-xl font-semibold">{restaurant.name}</h3>
-                <p><strong>Endereço:</strong> {restaurant.location.address || 'Não disponível'}</p>
-                <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat: any) => cat.name).join(', ') : 'Não disponível'}</p>
-                <p><strong>Distância:</strong> {(restaurant.distance / 1000).toFixed(2)} km</p>
-                <p><strong>Comentários:</strong> {restaurant.tips ? restaurant.tips.map((tip: any) => tip.text).join(', ') : 'Sem comentários disponíveis'}</p>
-              </div>
-            ))}
+            {restaurants.map((restaurant: any) => {
+              const lat = restaurant.geocodes?.main?.latitude;
+              const lng = restaurant.geocodes?.main?.longitude;
+              const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
+
+              return (
+                <a
+                  key={restaurant.fsq_id}
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block p-4 bg-white rounded-md shadow-md border-2 border-red-600 hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold">{restaurant.name}</h3>
+                    <FaMapMarkerAlt className="text-red-600 transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1" />
+                    </div>
+                  <p><strong>Endereço:</strong> {restaurant.location.address || 'Não disponível'}</p>
+                  <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat: any) => cat.name).join(', ') : 'Não disponível'}</p>
+                  <p><strong>Distância:</strong> {(restaurant.distance / 1000).toFixed(2)} km</p>
+                </a>
+              );
+            })}
           </div>
         ) : (
-          <p className="text-gray-500">Nenhum restaurante encontrado.</p>
+          <p className="text-gray-500 text-center mt-4">Nenhum resultado ainda. Faça uma busca!</p>
         )}
       </div>
     </div>

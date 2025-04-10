@@ -19,9 +19,15 @@ const Header = () => {
       </div>
 
       <nav className="w-full flex items-center justify-end">
-        <div className="text-white text-xl font-bold pr-4">
-          SOBRE
-        </div>
+      <button
+        onClick={() => {
+          const section = document.getElementById('sobre');
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        className="text-white text-xl font-bold pr-4 cursor-pointer hover:text-red-300 transition-colors">SOBRE
+      </button>
 
         {/* Ícone do menu para telas móveis */}
         <button

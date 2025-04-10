@@ -1,12 +1,13 @@
 import React from 'react';
- import developer1 from '../assets/Pedro.png';  // Substitua com o caminho correto
- import developer2 from '../assets/Rafael.png';  // Substitua com o caminho correto
- import developer3 from '../assets/Julia.png';  // Substitua com o caminho correto
- import developer4 from '../assets/Bia.png';  // Substitua com o caminho correto
+import developer1 from '../assets/Pedro.png';  // Substitua com o caminho correto
+import developer2 from '../assets/Rafael.png';  // Substitua com o caminho correto
+import developer3 from '../assets/Julia.png';  // Substitua com o caminho correto
+import developer4 from '../assets/Bia.png';  // Substitua com o caminho correto
 
 const AboutSection = () => {
   return (
-    <section className="bg-gradient-to-b from-red-500 via-red-700 to-[#8a0500] text-white py-12 mt-20 rounded-tl-[100px] rounded-tr-[100px]">
+    
+    <section id="sobre" className="bg-gradient-to-b from-red-500 via-red-700 to-[#8a0500] text-white py-12 mt-20 rounded-tl-[100px] rounded-tr-[100px]">
         
       <div className="text-center">
         {/* Títulos */}
