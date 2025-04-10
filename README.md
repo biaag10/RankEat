@@ -49,8 +49,8 @@ npm run dev
 
 ## Autores
 
-Bianca Andrade Galvão (Git: https://github.com/biaag10)
-Júlia Batista Iervese (Git: https://github.com/juliaiervese)
-Pedro Lima Almeida Santos	(Git: https://github.com/PPedrinho)
-Rafael Athaliba Bomfim Fraga (Git: https://github.com/athaliba)
+- Bianca Andrade Galvão (Git: https://github.com/biaag10)
+- Júlia Batista Iervese (Git: https://github.com/juliaiervese)
+- Pedro Lima Almeida Santos	(Git: https://github.com/PPedrinho)
+- Rafael Athaliba Bomfim Fraga (Git: https://github.com/athaliba)
 
