@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';  // Caminho da imagem
+import logo from '../assets/logo.png'; 
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(false); // Controle do menu em telas móveis
-  const navigate = useNavigate(); // Hook para redirecionamento
+  const [isOpen, setIsOpen] = useState(false); 
+  const navigate = useNavigate(); 
 
   return (
     <header className="bg-[#8A0500] flex justify-between items-center p-4 shadow-md w-full font-[Inter]">

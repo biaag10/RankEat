@@ -1,9 +1,9 @@
 import React from 'react';
-import developer1 from '../assets/Pedro.png';  // Substitua com o caminho correto
-import developer2 from '../assets/Rafael.png';  // Substitua com o caminho correto
-import developer3 from '../assets/Julia.png';  // Substitua com o caminho correto
-import developer4 from '../assets/Bia.png';  // Substitua com o caminho correto
-//Testando
+import developer1 from '../assets/Pedro.png';  
+import developer2 from '../assets/Rafael.png'; 
+import developer3 from '../assets/Julia.png'; 
+import developer4 from '../assets/Bia.png';  
+
 const AboutSection = () => {
   return (
     

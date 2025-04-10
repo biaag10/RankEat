@@ -136,7 +136,7 @@ const SearchRestaurants: React.FC = () => {
             })}
           </div>
         ) : (
-          <p className="text-gray-500 text-center mt-4">Nenhum resultado ainda. Faça uma busca!</p>
+          <p className="text-gray-500 text-center mt-4">Faça uma busca!</p>
         )}
       </div>
     </div>
