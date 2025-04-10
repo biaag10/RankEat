@@ -1,4 +1,3 @@
-import React from 'react';
 import developer1 from '../assets/Pedro.png';  
 import developer2 from '../assets/Rafael.png'; 
 import developer3 from '../assets/Julia.png'; 

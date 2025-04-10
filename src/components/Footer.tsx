@@ -1,4 +1,3 @@
-import React from 'react';
 import github from '../assets/github.png';  
 
 const Footer = () => {
@@ -20,7 +19,7 @@ const Footer = () => {
           <p className="text-sm">Bianca Andrade</p>
         </a>
  
- 
+
         <a
           href="https://github.com/juliaiervese"
           target="_blank"
