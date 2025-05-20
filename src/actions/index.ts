@@ -7,15 +7,17 @@ export const loginUser = async (emailOrUsername: string, password: string) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username: emailOrUsername, password }), // Envia username ou email e senha
+      body: JSON.stringify({ username: emailOrUsername, password }), // pode ser email ou username
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      // Salvar o token no localStorage ou cookies
-      localStorage.setItem('token', data.token); // Armazenar token no localStorage
-      return { success: true };
+      // Salvar token e userId no localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId);
+
+      return { success: true, token: data.token, userId: data.userId };
     } else {
       return { success: false, message: data.message || 'Login failed. Please try again.' };
     }
@@ -23,6 +25,7 @@ export const loginUser = async (emailOrUsername: string, password: string) => {
     return { success: false, message: 'An error occurred. Please try again.' };
   }
 };
+
 
 // REGISTRO
 
@@ -61,6 +64,7 @@ export const fetchFavoritos = async (userId: string, token: string) => {
       },
     });
 
+    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Erro ao buscar favoritos');

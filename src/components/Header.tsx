@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
       </div>
 
       <nav className="w-full flex items-center justify-end gap-6">
-        {isLoggedIn && (
+        {isLoggedIn ? (
           <>
             <button
               onClick={() => navigate('/')}
@@ -62,9 +62,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
               SAIR
             </button>
           </>
-        )}
-
-        {!isLoggedIn && (
+        ) : (
           <>
             <button
               onClick={() => navigate('/login')}

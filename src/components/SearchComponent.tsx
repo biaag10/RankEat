@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 
-import { addFavorito, removeFavorito } from '../actions'; // ajuste o caminho conforme seu projeto
+import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions'; // ajuste o caminho conforme seu projeto
 
 interface Restaurante {
   fsq_id: string;
@@ -39,15 +39,6 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
     return true;
   };
 
-  const fetchFavorites = async () => {
-    // Se quiser, pode adicionar fetchFavoritos para popular favoriteIds
-    // Mas aqui vamos focar só em add/remove conforme pedido
-  };
-
-  useEffect(() => {
-    fetchFavorites();
-  }, [userId, token]);
-
   const buscarRestaurantesPorCep = async () => {
     setError('');
     setRestaurants([]);
@@ -67,6 +58,23 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       if (data.status === 'OK' && data.results.length > 0) {
         const latitude = data.results[0].geometry.location.lat;
         const longitude = data.results[0].geometry.location.lng;
+
+        try {
+        await addHistorico(
+          {
+            cep,
+            latitude,
+            longitude,
+            userId,
+            // opcionalmente IP ou outros dados
+          },
+          token
+        );
+        console.log('Histórico salvo com sucesso');
+      } catch (error) {
+        console.error('Erro ao salvar histórico:', error);
+      }
+
         buscarRestaurantes(latitude, longitude);
       } else {
         setError('Não foi possível encontrar as coordenadas para esse CEP.');
@@ -76,6 +84,7 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       setError('Ocorreu um erro ao buscar o CEP.');
     }
   };
+  
 
   const buscarRestaurantes = async (latitude: number, longitude: number) => {
     try {
@@ -91,6 +100,8 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       } else {
         setRestaurants([]);
         setError('Nenhum restaurante encontrado nas proximidades.');
+        // Atualiza favoritos após atualizar restaurantes
+      await fetchFavoritos(userId, token)
       }
     } catch (error) {
       console.error('Erro ao buscar restaurantes:', error);
