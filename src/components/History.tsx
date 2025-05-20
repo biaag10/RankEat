@@ -16,13 +16,21 @@ interface HistoryProps {
 const History: React.FC<HistoryProps> = ({ token }) => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadHistory = async () => {
     try {
       const data = await fetchHistorico(token);
-      setHistory(data);
+
+      // Verificar se data é realmente um array
+      if (Array.isArray(data)) {
+        setHistory(data);
+      } else {
+        setError('Erro ao buscar histórico: dados inválidos.');
+      }
     } catch (error) {
       console.error('Erro ao buscar histórico:', error);
+      setError('Erro ao buscar histórico');
     } finally {
       setLoading(false);
     }
@@ -30,9 +38,10 @@ const History: React.FC<HistoryProps> = ({ token }) => {
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [token]);
 
   if (loading) return <p>Carregando histórico...</p>;
+  if (error) return <p>{error}</p>;
   if (history.length === 0) return <p>Você não realizou buscas ainda.</p>;
 
   return (

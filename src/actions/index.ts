@@ -167,6 +167,7 @@ export const fetchHistorico = async (token: string, limit = 10) => {
   }
 };
 
+
 export const addHistorico = async (
   buscaData: {
     cep: string;

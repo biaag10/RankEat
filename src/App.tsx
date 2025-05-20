@@ -82,7 +82,9 @@ function App() {
                 path="/login"
                 element={<Login onLoginSuccess={handleLoginSuccess} />}
               />
-              <Route path="/register" element={<Register />} />
+              <Route 
+              path="/register" 
+              element={<Register />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </>
           ) : (
