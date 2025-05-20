@@ -1,7 +1,13 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
-const Header = () => {
+interface HeaderProps {
+  onLogout: () => void;
+  isLoggedIn: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
   const navigate = useNavigate();
 
   return (
@@ -16,35 +22,64 @@ const Header = () => {
       </div>
 
       <nav className="w-full flex items-center justify-end gap-6">
-        <button
-          onClick={() => navigate('/')}
-          className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
-        >
-          HOME
-        </button>
-        <button
-          onClick={() => navigate('/favoritos')}
-          className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
-        >
-          FAVORITOS
-        </button>
-        <button
-          onClick={() => navigate('/historico')}
-          className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
-        >
-          HISTÓRICO
-        </button>
-        <button
-          onClick={() => {
-            const section = document.getElementById('sobre');
-            if (section) {
-              section.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
-          className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
-        >
-          SOBRE
-        </button>
+        {isLoggedIn && (
+          <>
+            <button
+              onClick={() => navigate('/')}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+            >
+              HOME
+            </button>
+            <button
+              onClick={() => navigate('/favoritos')}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+            >
+              FAVORITOS
+            </button>
+            <button
+              onClick={() => navigate('/historico')}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+            >
+              HISTÓRICO
+            </button>
+            <button
+              onClick={() => {
+                const section = document.getElementById('sobre');
+                if (section) section.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+            >
+              SOBRE
+            </button>
+
+            <button
+              onClick={() => {
+                onLogout();
+                navigate('/login');
+              }}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-600 transition-colors"
+            >
+              SAIR
+            </button>
+          </>
+        )}
+
+        {!isLoggedIn && (
+          <>
+            <button
+              onClick={() => navigate('/login')}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+            >
+              LOGIN
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+            >
+              REGISTRAR
+            </button>
+          </>
+        )}
       </nav>
     </header>
   );
