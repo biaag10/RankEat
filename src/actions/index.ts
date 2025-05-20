@@ -1,0 +1,201 @@
+// LOGIN
+
+export const loginUser = async (emailOrUsername: string, password: string) => {
+  try {
+    const response = await fetch('http://localhost:3000/users/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username: emailOrUsername, password }), // Envia username ou email e senha
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Salvar o token no localStorage ou cookies
+      localStorage.setItem('token', data.token); // Armazenar token no localStorage
+      return { success: true };
+    } else {
+      return { success: false, message: data.message || 'Login failed. Please try again.' };
+    }
+  } catch (err) {
+    return { success: false, message: 'An error occurred. Please try again.' };
+  }
+};
+
+// REGISTRO
+
+export const registerUser = async (name: string, username: string, email: string, password: string) => {
+  try {
+    const response = await fetch('http://localhost:3000/users/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, username, email, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error registering user');
+    }
+
+    return await response.json();  // Retorna a resposta do servidor
+  } catch (error: unknown) {  // Aqui especificamos 'unknown' para o tipo de erro
+    if (error instanceof Error) {
+      throw new Error(error.message || 'An unexpected error occurred');  // Agora podemos acessar error.message
+    } else {
+      throw new Error('An unexpected error occurred');  // Caso o erro não seja uma instância de Error
+    }
+  }
+};
+
+// FAVORITOS
+
+export const fetchFavoritos = async (userId: string, token: string) => {
+  try {
+    const response = await fetch(`http://localhost:3000/favorites/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao buscar favoritos');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao buscar favoritos');
+    } else {
+      throw new Error('Erro inesperado ao buscar favoritos');
+    }
+  }
+};
+
+export const addFavorito = async (
+  favoritoData: {
+    userId: string;
+    restaurantId: string;
+    restaurantName: string;
+    restaurantLocation: string;
+  },
+  token: string
+) => {
+  try {
+    const response = await fetch(`http://localhost:3000/favorites`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(favoritoData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao adicionar favorito');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao adicionar favorito');
+    } else {
+      throw new Error('Erro inesperado ao adicionar favorito');
+    }
+  }
+};
+
+export const removeFavorito = async (
+  userId: string,
+  restaurantId: string,
+  token: string
+) => {
+  try {
+    const response = await fetch(`http://localhost:3000/favorites/${userId}/${restaurantId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao remover favorito');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao remover favorito');
+    } else {
+      throw new Error('Erro inesperado ao remover favorito');
+    }
+  }
+};
+
+// HISTÓRICO
+
+export const fetchHistorico = async (token: string, limit = 10) => {
+  try {
+    const response = await fetch(`http://localhost:3000/search-history?limit=${limit}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao buscar histórico');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao buscar histórico');
+    } else {
+      throw new Error('Erro inesperado ao buscar histórico');
+    }
+  }
+};
+
+export const addHistorico = async (
+  buscaData: {
+    cep: string;
+    latitude: number;
+    longitude: number;
+    userId?: string;
+    ipAddress?: string;
+  },
+  token: string
+) => {
+  try {
+    const response = await fetch(`http://localhost:3000/search-history`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(buscaData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao adicionar histórico');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao adicionar histórico');
+    } else {
+      throw new Error('Erro inesperado ao adicionar histórico');
+    }
+  }
+};
+
+

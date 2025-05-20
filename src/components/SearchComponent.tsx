@@ -1,46 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaMapMarkerAlt } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 
-// Tipos específicos para a resposta da API
+import { addFavorito, removeFavorito } from '../actions'; // ajuste o caminho conforme seu projeto
+
 interface Restaurante {
   fsq_id: string;
   name: string;
-  location: {
-    address: string;
-  };
+  location: { address: string };
   categories: { name: string }[];
   distance: number;
-  geocodes?: {
-    main?: {
-      latitude: number;
-      longitude: number;
-    };
-  };
+  geocodes?: { main?: { latitude: number; longitude: number } };
 }
 
-const SearchRestaurants: React.FC = () => {
+interface SearchRestaurantsProps {
+  userId: string;
+  token: string;
+}
+
+const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) => {
   const [cep, setCep] = useState<string>('');
   const [restaurants, setRestaurants] = useState<Restaurante[]>([]);
   const [error, setError] = useState<string>('');
   const [cepError, setCepError] = useState<string>('');
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
-  const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc='; // Foursquare API
-  const apiKeyGeocoding = 'AIzaSyBJaZFuZvi8axZBiwxYeEumv4gMP0ti54o'; // Google Geocoding API
+  const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc=';
+  const apiKeyGeocoding = 'AIzaSyBJaZFuZvi8axZBiwxYeEumv4gMP0ti54o';
 
   const validarCep = (inputCep: string) => {
     const cepRegex = /^[0-9]{8}$/;
     if (!cepRegex.test(inputCep)) {
-      if (inputCep.length < 8) {
-        setCepError('O CEP deve conter 8 dígitos.');
-      } else {
-        setCepError('O CEP deve conter apenas números.');
-      }
+      if (inputCep.length < 8) setCepError('O CEP deve conter 8 dígitos.');
+      else setCepError('O CEP deve conter apenas números.');
       return false;
     }
     setCepError('');
     return true;
   };
+
+  const fetchFavorites = async () => {
+    // Se quiser, pode adicionar fetchFavoritos para popular favoriteIds
+    // Mas aqui vamos focar só em add/remove conforme pedido
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [userId, token]);
 
   const buscarRestaurantesPorCep = async () => {
     setError('');
@@ -51,9 +57,7 @@ const SearchRestaurants: React.FC = () => {
       return;
     }
 
-    if (!validarCep(cep)) {
-      return;
-    }
+    if (!validarCep(cep)) return;
 
     try {
       const geocodingEndpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${cep}&key=${apiKeyGeocoding}`;
@@ -73,14 +77,12 @@ const SearchRestaurants: React.FC = () => {
     }
   };
 
-  const buscarRestaurantes = async (latitude: string, longitude: string) => {
+  const buscarRestaurantes = async (latitude: number, longitude: number) => {
     try {
       const endpoint = `https://api.foursquare.com/v3/places/search?ll=${latitude},${longitude}&radius=1000&limit=5&categories=13065`;
 
       const response = await axios.get(endpoint, {
-        headers: {
-          Authorization: apiKeyFoursquare,
-        },
+        headers: { Authorization: apiKeyFoursquare },
       });
 
       if (response.data.results.length > 0) {
@@ -93,6 +95,35 @@ const SearchRestaurants: React.FC = () => {
     } catch (error) {
       console.error('Erro ao buscar restaurantes:', error);
       setError('Ocorreu um erro ao buscar os restaurantes.');
+    }
+  };
+
+  const toggleFavorite = async (restaurant: Restaurante) => {
+    const isFav = favoriteIds.has(restaurant.fsq_id);
+
+    try {
+      if (isFav) {
+        await removeFavorito(userId, restaurant.fsq_id, token);
+        setFavoriteIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(restaurant.fsq_id);
+          return newSet;
+        });
+      } else {
+        await addFavorito(
+          {
+            userId,
+            restaurantId: restaurant.fsq_id,
+            restaurantName: restaurant.name,
+            restaurantLocation: restaurant.location.address,
+          },
+          token
+        );
+        setFavoriteIds((prev) => new Set(prev).add(restaurant.fsq_id));
+      }
+    } catch (error) {
+      console.error('Erro ao alterar favorito:', error);
+      alert('Erro ao alterar favorito');
     }
   };
 
@@ -128,27 +159,42 @@ const SearchRestaurants: React.FC = () => {
       <div id="results" className="mt-6 w-full max-w-md">
         {restaurants.length > 0 ? (
           <div className="space-y-4">
-            {restaurants.map((restaurant: Restaurante) => {
+            {restaurants.map((restaurant) => {
               const lat = restaurant.geocodes?.main?.latitude;
               const lng = restaurant.geocodes?.main?.longitude;
               const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : '#';
+              const isFav = favoriteIds.has(restaurant.fsq_id);
 
               return (
-                <a
+                <div
                   key={restaurant.fsq_id}
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group block p-4 bg-white rounded-md shadow-md border-2 border-red-600 hover:shadow-lg transition-shadow"
+                  className="group p-4 bg-white rounded-md shadow-md border-2 border-red-600 hover:shadow-lg transition-shadow flex justify-between items-center"
                 >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold">{restaurant.name}</h3>
-                    <FaMapMarkerAlt className="text-red-600 transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1" />
-                    </div>
-                  <p><strong>Endereço:</strong> {restaurant.location.address || 'Não disponível'}</p>
-                  <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat) => cat.name).join(', ') : 'Não disponível'}</p>
-                  <p><strong>Distância:</strong> {(restaurant.distance / 1000).toFixed(2)} km</p>
-                </a>
+                  <div>
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xl font-semibold hover:underline"
+                    >
+                      {restaurant.name}
+                    </a>
+                    <p><strong>Endereço:</strong> {restaurant.location.address || 'Não disponível'}</p>
+                    <p><strong>Categoria:</strong> {restaurant.categories ? restaurant.categories.map((cat) => cat.name).join(', ') : 'Não disponível'}</p>
+                    <p><strong>Distância:</strong> {(restaurant.distance / 1000).toFixed(2)} km</p>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-8">
+                    <FaMapMarkerAlt className="text-red-600 transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1" size={24} />
+                    <button
+                      aria-label={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                      onClick={() => toggleFavorite(restaurant)}
+                      className="focus:outline-none"
+                    >
+                      <FaStar size={24} className={isFav ? 'text-yellow-400' : 'text-gray-400'} />
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
