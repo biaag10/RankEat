@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './styles/main.css';
 
@@ -95,8 +95,6 @@ function App() {
                   <SearchComponent
                     userId={userId!}
                     token={token}
-                    apiKeyFoursquare="SUA_API_FOURSQUARE"
-                    apiKeyGeocoding="SUA_API_GOOGLE"
                   />
                 }
               />

@@ -21,7 +21,8 @@ export const loginUser = async (emailOrUsername: string, password: string) => {
     } else {
       return { success: false, message: data.message || 'Login failed. Please try again.' };
     }
-  } catch (err) {
+  } catch (error) {
+    console.error('Error during login:', error);
     return { success: false, message: 'An error occurred. Please try again.' };
   }
 };
