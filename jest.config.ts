@@ -9,8 +9,10 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'], // Importa jest-dom
   testMatch: ['**/?(*.)+(test).[tj]s?(x)'], // Procura arquivos .test.ts, .test.tsx etc.
   moduleNameMapper: {
-    '\\.(css|less|sass|scss)$': 'identity-obj-proxy', // Mapeia import de CSS para testes
-  },
+  '\\.(css|less|sass|scss)$': 'identity-obj-proxy',
+  '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/src/mocks/fileMock.js',
+},
+
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.app.json', // Usa seu tsconfig do app
