@@ -9,11 +9,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // NOVO
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true); // ativa loading
     const result = await loginUser(emailOrUsername, password);
+    setLoading(false); // desativa loading
 
     if (result.success && result.token && result.userId) {
       onLoginSuccess(result.token, result.userId);
@@ -33,6 +36,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           onChange={(e) => setEmailOrUsername(e.target.value)}
           className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-600"
           required
+          disabled={loading} // opcional: desabilita input durante loading
         />
         <input
           type="password"
@@ -41,13 +45,15 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           onChange={(e) => setPassword(e.target.value)}
           className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-600"
           required
+          disabled={loading} // opcional
         />
         {error && <p className="text-red-500">{error}</p>}
         <button
           type="submit"
-          className="bg-[#8A0500] text-white p-2 rounded hover:bg-red-700"
+          disabled={loading} // DESABILITA BOTÃO durante loading
+          className="bg-[#8A0500] text-white p-2 rounded hover:bg-red-700 disabled:opacity-50"
         >
-          Entrar
+          {loading ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
     </div>
