@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchFavoritos, removeFavorito } from '../actions/index';
 import { notifyError, notifySuccess } from '../components/toasts/index';
+import { FaStar } from 'react-icons/fa';
 
 interface Favorite {
   _id: string;
@@ -18,7 +19,7 @@ interface FavoritesProps {
 const Favorites: React.FC<FavoritesProps> = ({ userId, token }) => {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
-  const [removingId, setRemovingId] = useState<string | null>(null); // para desabilitar botão e mostrar loading na remoção
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const loadFavorites = async () => {
     try {
@@ -38,13 +39,12 @@ const Favorites: React.FC<FavoritesProps> = ({ userId, token }) => {
   }, []);
 
   const handleRemove = async (restaurantId: string) => {
-    if (removingId) return; // bloqueia enquanto remove outro
+    if (removingId) return;
 
     try {
       setRemovingId(restaurantId);
       await removeFavorito(userId, restaurantId, token);
       notifySuccess('Restaurante removido dos favoritos!');
-      // Atualiza a lista local removendo o favorito removido
       setFavorites((prev) => prev.filter((fav) => fav.restaurantId !== restaurantId));
     } catch (error) {
       notifyError('Erro ao remover favorito.');
@@ -59,6 +59,11 @@ const Favorites: React.FC<FavoritesProps> = ({ userId, token }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-4xl font-extrabold mb-4 flex items-center gap-3 text-red-700">
+        <FaStar size={36} className="text-yellow-400" />
+        Você favoritou {favorites.length} restaurante{favorites.length > 1 ? 's' : ''}
+      </h1>
+
       <h2 className="text-3xl font-bold mb-6">Seus Favoritos</h2>
       <ul className="space-y-4">
         {favorites.map((fav) => (
