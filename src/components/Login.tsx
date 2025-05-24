@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { loginUser } from '../actions/index'; // ajuste o caminho conforme seu projeto
+import { loginUser } from '../actions/index'; 
+import { notifyError, notifySuccess } from '../components/toasts/index'; 
 
 interface LoginProps {
   onLoginSuccess: (token: string, userId: string) => void;
@@ -8,17 +9,18 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // estado para toggle de visibilidade da senha
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+
     const result = await loginUser(emailOrUsername, password);
 
     if (result.success && result.token && result.userId) {
+      notifySuccess('Login realizado com sucesso!');
       onLoginSuccess(result.token, result.userId);
     } else {
-      setError(result.message || 'Falha no login');
+      notifyError(result.message || 'Falha no login');
     }
   };
 
@@ -35,14 +37,25 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           required
         />
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-600"
           required
         />
-        {error && <p className="text-red-500">{error}</p>}
+
+        {/* Checkbox para mostrar/ocultar senha */}
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={showPassword}
+            onChange={() => setShowPassword(!showPassword)}
+            className="accent-red-600"
+          />
+          Mostrar senha
+        </label>
+
         <button
           type="submit"
           className="bg-[#8A0500] text-white p-2 rounded hover:bg-red-700"

@@ -1,6 +1,8 @@
+import ToastContainer from './components/toasts/ToastProvider';
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './styles/main.css';
+import { notifySuccess } from './components/toasts/index';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -53,6 +55,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    notifySuccess('Você foi deslogado com sucesso!');
     console.log('handleLogout: limpando localStorage e estado...');
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
@@ -73,6 +76,7 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ToastContainer />
       <Header onLogout={handleLogout} isLoggedIn={!!token} />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
