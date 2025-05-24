@@ -43,10 +43,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
               HISTÓRICO
             </button>
             <button
-              onClick={() => {
-                const section = document.getElementById('sobre');
-                if (section) section.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => navigate('/sobre')}
               className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
             >
               SOBRE
