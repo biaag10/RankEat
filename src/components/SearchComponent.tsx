@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 
-import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions'; // ajuste o caminho conforme seu projeto
+import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions'; 
+import { notifyError, notifySuccess } from '../components/toasts/index';
 
 interface Restaurante {
   fsq_id: string;
@@ -11,6 +12,10 @@ interface Restaurante {
   categories: { name: string }[];
   distance: number;
   geocodes?: { main?: { latitude: number; longitude: number } };
+}
+
+interface Favorito {
+  restaurantId: string;
 }
 
 interface SearchRestaurantsProps {
@@ -31,12 +36,25 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
   const validarCep = (inputCep: string) => {
     const cepRegex = /^[0-9]{8}$/;
     if (!cepRegex.test(inputCep)) {
-      if (inputCep.length < 8) setCepError('O CEP deve conter 8 dígitos.');
-      else setCepError('O CEP deve conter apenas números.');
+      if (inputCep.length < 8) notifyError('O CEP deve conter 8 dígitos.');
+      // else setCepError('O CEP deve conter apenas números.');
+      notifyError('O CEP deve conter apenas números.');
       return false;
     }
     setCepError('');
     return true;
+  };
+
+  // Função para atualizar os favoritos do usuário no estado
+  const atualizarFavoritos = async () => {
+    try {
+      const favoritos: Favorito[] = await fetchFavoritos(userId, token);
+      const favIds = new Set(favoritos.map((fav) => fav.restaurantId));
+      setFavoriteIds(favIds);
+    } catch (err) {
+      console.error('Erro ao buscar favoritos:', err);
+      notifyError('Erro ao carregar favoritos');
+    }
   };
 
   const buscarRestaurantesPorCep = async () => {
@@ -44,7 +62,8 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
     setRestaurants([]);
 
     if (!cep) {
-      alert('Por favor, insira o CEP.');
+      // alert('Por favor, insira o CEP.');
+      notifyError('Por favor, insira o CEP.');
       return;
     }
 
@@ -60,31 +79,32 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
         const longitude = data.results[0].geometry.location.lng;
 
         try {
-        await addHistorico(
-          {
-            cep,
-            latitude,
-            longitude,
-            userId,
-            // opcionalmente IP ou outros dados
-          },
-          token
-        );
-        console.log('Histórico salvo com sucesso');
-      } catch (error) {
-        console.error('Erro ao salvar histórico:', error);
-      }
+          await addHistorico(
+            {
+              cep,
+              latitude,
+              longitude,
+              userId,
+            },
+            token
+          );
+          console.log('Histórico salvo com sucesso');
+        } catch (error) {
+          console.error('Erro ao salvar histórico:', error);
+        }
 
-        buscarRestaurantes(latitude, longitude);
+        await buscarRestaurantes(latitude, longitude);
+        await atualizarFavoritos(); // Atualiza favoritos após buscar restaurantes
       } else {
-        setError('Não foi possível encontrar as coordenadas para esse CEP.');
+        // setError('Não foi possível encontrar as coordenadas para esse CEP.');
+        notifyError('Não foi possível encontrar as coordenadas para esse CEP.');
       }
     } catch (error) {
       console.error('Erro ao buscar coordenadas do CEP:', error);
-      setError('Ocorreu um erro ao buscar o CEP.');
+      // setError('Ocorreu um erro ao buscar o CEP.');
+      notifyError('Ocorreu um erro ao buscar o CEP.');
     }
   };
-  
 
   const buscarRestaurantes = async (latitude: number, longitude: number) => {
     try {
@@ -99,13 +119,13 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
         setError('');
       } else {
         setRestaurants([]);
-        setError('Nenhum restaurante encontrado nas proximidades.');
-        // Atualiza favoritos após atualizar restaurantes
-      await fetchFavoritos(userId, token)
+        // setError('Nenhum restaurante encontrado nas proximidades.');
+        notifyError('Nenhum restaurante encontrado nas proximidades.');
       }
     } catch (error) {
       console.error('Erro ao buscar restaurantes:', error);
-      setError('Ocorreu um erro ao buscar os restaurantes.');
+      // setError('Ocorreu um erro ao buscar os restaurantes.');
+      notifyError('Ocorreu um erro ao buscar os restaurantes.');
     }
   };
 
@@ -120,6 +140,7 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
           newSet.delete(restaurant.fsq_id);
           return newSet;
         });
+        notifySuccess('Restaurante removido dos favoritos');
       } else {
         await addFavorito(
           {
@@ -131,10 +152,12 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
           token
         );
         setFavoriteIds((prev) => new Set(prev).add(restaurant.fsq_id));
+        notifySuccess('Restaurante adicionado aos favoritos.');
       }
     } catch (error) {
       console.error('Erro ao alterar favorito:', error);
-      alert('Erro ao alterar favorito');
+      // alert('Erro ao alterar favorito');
+      notifyError('Erro ao alterar favorito');
     }
   };
 
