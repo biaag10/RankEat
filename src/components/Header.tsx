@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
-
+//Alteração feita na linha 45
 interface HeaderProps {
   onLogout: () => void;
   isLoggedIn: boolean;
@@ -42,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
             >
               HISTÓRICO
             </button>
+            
             <button
               onClick={() => navigate('/sobre')}
               className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
