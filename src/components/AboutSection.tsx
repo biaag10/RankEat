@@ -1,6 +1,6 @@
-import ideiasImg from '../assets/ideias.jpeg';
-import cozinhandoImg from '../assets/cozinhando.jpg';
-import equipeImg from '../assets/equipe.jpg';
+import ideiasImg from '../assets/ideias.png';
+import cozinhandoImg from '../assets/cozinhando.png';
+import equipeImg from '../assets/equipe.png';
 import quemSomosImg from '../assets/quemsomos.png';
 
 import developer1 from '../assets/Pedro.png';   
