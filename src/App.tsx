@@ -12,11 +12,12 @@ import SearchComponent from './components/SearchComponent';
 import Favorites from './components/Favorites';
 import History from './components/History';
 import AboutSection from './components/AboutSection';
+import CommentsForm from './components/CommentsForm';  // Importação do novo componente
 
 function App() {
   console.log('App renderizado');
 
-  const [loadingAuth, setLoadingAuth] = useState(true); // controla carregamento auth
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -86,31 +87,24 @@ function App() {
                 path="/login"
                 element={<Login onLoginSuccess={handleLoginSuccess} />}
               />
-              <Route 
-              path="/register" 
-              element={<Register />} />
+              <Route path="/register" element={<Register />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </>
           ) : (
             <>
               <Route
                 path="/"
-                element={
-                  <SearchComponent
-                    userId={userId!}
-                    token={token}
-                  />
-                }
+                element={<SearchComponent userId={userId!} token={token} />}
               />
               <Route
                 path="/favoritos"
                 element={<Favorites userId={userId!} token={token} />}
               />
-              <Route
-                path="/historico"
-                element={<History token={token} />}
-              />
+              <Route path="/historico" element={<History token={token} />} />
               <Route path="/sobre" element={<AboutSection />} />
+
+              <Route path="/diario" element={<CommentsForm />} />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
