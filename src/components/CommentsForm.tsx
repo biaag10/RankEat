@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { addComment } from '../actions';
+import { notifyError, notifySuccess } from './toasts/index'; 
 
 const styles = {
   container: `max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg mt-10`,
@@ -35,10 +37,8 @@ const CommentsForm: React.FC = () => {
   const [cuisineType, setCuisineType] = useState('');
   const [dishes, setDishes] = useState<Dish[]>([]);
 
-  // To generate unique ids for dishes
   const nextId = useRef(1);
 
-  // Add new dish
   const addDish = () => {
     setDishes((prev) => [
       ...prev,
@@ -46,13 +46,11 @@ const CommentsForm: React.FC = () => {
     ]);
   };
 
-  // Remove last dish
   const removeDish = () => {
     setDishes((prev) => prev.slice(0, -1));
   };
 
-  // Update dish field by id
-  const updateDish = (id: number, field: keyof Omit<Dish, 'id' | 'fileObjectUrl'>, value: any) => {
+  const updateDish = (id: number, field: keyof Omit<Dish, 'id' | 'fileObjectUrl'>, value: string | number) => {
     setDishes((prev) =>
       prev.map((dish) =>
         dish.id === id
@@ -65,7 +63,6 @@ const CommentsForm: React.FC = () => {
     );
   };
 
-  // Handle file input change
   const handleFileChange = (id: number, file: File | null) => {
     if (!file) return;
 
@@ -73,7 +70,6 @@ const CommentsForm: React.FC = () => {
     setDishes((prev) =>
       prev.map((dish) => {
         if (dish.id === id) {
-          // Release old object URL if exists
           if (dish.fileObjectUrl) URL.revokeObjectURL(dish.fileObjectUrl);
           return { ...dish, photoUrl: fileUrl, fileObjectUrl: fileUrl };
         }
@@ -82,7 +78,6 @@ const CommentsForm: React.FC = () => {
     );
   };
 
-  // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
       dishes.forEach((dish) => {
@@ -93,7 +88,6 @@ const CommentsForm: React.FC = () => {
     };
   }, [dishes]);
 
-  // Star rating UI
   const StarRating: React.FC<{
     rating: number;
     onChange: (rating: number) => void;
@@ -118,6 +112,40 @@ const CommentsForm: React.FC = () => {
         ))}
       </div>
     );
+  };
+
+  // Função para salvar os comentários no backend
+  const saveComment = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Você precisa estar logado para salvar um comentário');
+      return;
+    }
+
+    const commentData = {
+      restaurantName,
+      cuisineType,
+      dishes: dishes.map((dish) => ({
+        ...dish,
+        photoUrl: dish.photoUrl === null ? undefined : dish.photoUrl, // Converte null para undefined
+      })),
+    };
+
+    try {
+      await addComment(commentData, token);
+
+      // Notificação de sucesso
+      notifySuccess('Comentário salvo com sucesso!');
+
+      setRestaurantName('');
+      setCuisineType('');
+      setDishes([]);
+    } catch (error) {
+      console.error('Error saving comment:', error);
+
+      // Notificação de erro
+      notifyError('Erro ao salvar comentário. Preencha todas as informações e tente novamente.');
+    }
   };
 
   return (
@@ -171,9 +199,7 @@ const CommentsForm: React.FC = () => {
                 type="file"
                 accept="image/*"
                 className={styles.fileInput}
-                onChange={(e) =>
-                  handleFileChange(dish.id, e.target.files ? e.target.files[0] : null)
-                }
+                onChange={(e) => handleFileChange(dish.id, e.target.files ? e.target.files[0] : null)}
               />
             </div>
 
@@ -192,10 +218,7 @@ const CommentsForm: React.FC = () => {
                 value={dish.price}
                 onChange={(e) => updateDish(dish.id, 'price', e.target.value)}
               />
-              <StarRating
-                rating={dish.rating}
-                onChange={(rating) => updateDish(dish.id, 'rating', rating)}
-              />
+              <StarRating rating={dish.rating} onChange={(rating) => updateDish(dish.id, 'rating', rating)} />
               <textarea
                 className={styles.commentBox}
                 placeholder="Comentário sobre o prato..."
@@ -222,7 +245,7 @@ const CommentsForm: React.FC = () => {
         </button>
       </div>
 
-      <button className={styles.btn} type="submit" style={{ marginTop: '40px' }}>
+      <button className={styles.btn} type="button" style={{ marginTop: '40px' }} onClick={saveComment}>
         Salvar Comentários
       </button>
     </div>
