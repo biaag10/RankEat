@@ -12,7 +12,8 @@ import SearchComponent from './components/SearchComponent';
 import Favorites from './components/Favorites';
 import History from './components/History';
 import AboutSection from './components/AboutSection';
-import CommentsForm from './components/CommentsForm';  // Importação do novo componente
+import CommentsForm from './components/CommentsForm'; 
+import CommentHistory from './components/CommentHistory';
 
 function App() {
   console.log('App renderizado');
@@ -104,6 +105,7 @@ function App() {
               <Route path="/sobre" element={<AboutSection />} />
 
               <Route path="/diario" element={<CommentsForm />} />
+              <Route path="/historico-diario" element={<CommentHistory token={token} />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { addComment } from '../actions';
-import { notifyError, notifySuccess } from './toasts/index'; 
+import { useLocation, useNavigate } from 'react-router-dom'; // Importa o hook useNavigate
+import { addComment, updateComment } from '../actions';
+import { notifyError, notifySuccess } from './toasts/index';
 
 const styles = {
   container: `max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg mt-10`,
@@ -20,6 +21,7 @@ const styles = {
   btn: `bg-[#8A0500] text-white font-bold py-3 px-8 rounded-md cursor-pointer hover:bg-[#a6331f] transition`,
   fileInput: `hidden`,
   removeBtn: `absolute top-2 right-2 bg-[#a6331f] hover:bg-[#8A0500] text-white rounded-full w-7 h-7 flex items-center justify-center text-xl font-bold cursor-pointer shadow`,
+  historyBtn: `absolute bottom-130 right-10 bg-[#8A0500] text-white font-bold py-3 px-6 rounded-md cursor-pointer hover:bg-[#a6331f] transition`,
 };
 
 type Dish = {
@@ -28,22 +30,39 @@ type Dish = {
   price: string;
   rating: number;
   comment: string;
-  photoUrl: string | null;
+  photoUrl: string | undefined;  
   fileObjectUrl?: string;
 };
+
 
 const CommentsForm: React.FC = () => {
   const [restaurantName, setRestaurantName] = useState('');
   const [cuisineType, setCuisineType] = useState('');
   const [dishes, setDishes] = useState<Dish[]>([]);
-
+  const navigate = useNavigate(); // Inicializa o hook useNavigate
+  const location = useLocation();
   const nextId = useRef(1);
 
+  const { comment } = location.state || {}; // Recebe os dados do comentário quando redirecionado
+
+  useEffect(() => {
+    if (comment) {
+      setRestaurantName(comment.restaurantName);
+      setCuisineType(comment.cuisineType);
+      setDishes(comment.dishes);
+    }
+  }, [comment]);
+
   const addDish = () => {
-    setDishes((prev) => [
-      ...prev,
-      { id: nextId.current++, name: '', price: '', rating: 0, comment: '', photoUrl: null },
-    ]);
+  setDishes((prev) => [
+    ...prev,
+    { id: nextId.current++, name: '', price: '', rating: 0, comment: '', photoUrl: undefined }, // Altere para undefined
+  ]);
+};
+
+
+  const goToCommentHistory = () => {
+    navigate('/historico-diario'); // Vai para a rota "/historico-diario"
   };
 
   const removeDish = () => {
@@ -78,16 +97,6 @@ const CommentsForm: React.FC = () => {
     );
   };
 
-  useEffect(() => {
-    return () => {
-      dishes.forEach((dish) => {
-        if (dish.fileObjectUrl) {
-          URL.revokeObjectURL(dish.fileObjectUrl);
-        }
-      });
-    };
-  }, [dishes]);
-
   const StarRating: React.FC<{
     rating: number;
     onChange: (rating: number) => void;
@@ -114,47 +123,49 @@ const CommentsForm: React.FC = () => {
     );
   };
 
-  // Função para salvar os comentários no backend
+  // Função para salvar ou atualizar os comentários no backend
   const saveComment = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Você precisa estar logado para salvar um comentário');
-      return;
-    }
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Você precisa estar logado para salvar um comentário');
+    return;
+  }
 
-    const commentData = {
-      restaurantName,
-      cuisineType,
-      dishes: dishes.map((dish) => ({
-        ...dish,
-        photoUrl: dish.photoUrl === null ? undefined : dish.photoUrl, // Converte null para undefined
-      })),
-    };
-
-    try {
-      await addComment(commentData, token);
-
-      // Notificação de sucesso
-      notifySuccess('Comentário salvo com sucesso!');
-
-      setRestaurantName('');
-      setCuisineType('');
-      setDishes([]);
-    } catch (error) {
-      console.error('Error saving comment:', error);
-
-      // Notificação de erro
-      notifyError('Erro ao salvar comentário. Preencha todas as informações e tente novamente.');
-    }
+  const commentData = {
+    restaurantName,
+    cuisineType,
+    dishes: dishes.map((dish) => ({
+      ...dish,
+      photoUrl: dish.photoUrl === null ? undefined : dish.photoUrl, // Garantir que null seja convertido para undefined
+    })),
   };
+
+  try {
+    if (comment) {
+      await updateComment(comment._id, commentData, token); // Atualiza o comentário
+      console.log('Comentário atualizado:', commentData);
+      notifySuccess('Comentário atualizado com sucesso!');
+    } else {
+      await addComment(commentData, token); // Cria um novo comentário
+      notifySuccess('Comentário salvo com sucesso!');
+    }
+
+    setRestaurantName('');
+    setCuisineType('');
+    setDishes([]);
+    navigate('/historico-diario'); // Redireciona para o histórico de comentários
+  } catch (error) {
+    console.error('Error saving comment:', error);
+    notifyError('Erro ao salvar comentário. Preencha todas as informações e tente novamente.');
+  }
+};
+
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.heading}>Comentários Personalizados - RankEat</h1>
+      <h1 className={styles.heading}>{comment ? 'Editar Comentário' : 'Adicionar Comentário'}</h1>
 
-      <label htmlFor="restaurant-name" className={styles.label}>
-        Nome do Restaurante
-      </label>
+      <label htmlFor="restaurant-name" className={styles.label}>Nome do Restaurante</label>
       <input
         id="restaurant-name"
         className={styles.input}
@@ -164,9 +175,7 @@ const CommentsForm: React.FC = () => {
         onChange={(e) => setRestaurantName(e.target.value)}
       />
 
-      <label htmlFor="cuisine-type" className={styles.label}>
-        Tipo de Cozinha
-      </label>
+      <label htmlFor="cuisine-type" className={styles.label}>Tipo de Cozinha</label>
       <input
         id="cuisine-type"
         className={styles.input}
@@ -180,11 +189,7 @@ const CommentsForm: React.FC = () => {
         {dishes.map((dish) => (
           <div key={dish.id} className={styles.dishCard}>
             <div className={styles.dishPhotoWrapper}>
-              <label
-                htmlFor={`file-input-${dish.id}`}
-                className={styles.dishPhoto}
-                title="Clique para adicionar foto"
-              >
+              <label htmlFor={`file-input-${dish.id}`} className={styles.dishPhoto} title="Clique para adicionar foto">
                 {dish.photoUrl ? '' : '+ Foto'}
                 {dish.photoUrl && (
                   <img
@@ -246,7 +251,16 @@ const CommentsForm: React.FC = () => {
       </div>
 
       <button className={styles.btn} type="button" style={{ marginTop: '40px' }} onClick={saveComment}>
-        Salvar Comentários
+        {comment ? 'Atualizar Comentário' : 'Salvar Comentário'}
+      </button>
+
+      {/* Novo botão para acessar o histórico */}
+      <button 
+        className={styles.historyBtn} // Usando o estilo específico
+        type="button" 
+        onClick={goToCommentHistory} 
+      >
+        Acessar Histórico de Comentários
       </button>
     </div>
   );
