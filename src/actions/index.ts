@@ -329,3 +329,29 @@ export const deleteComment = async (commentId: string, token: string) => {
     }
   }
 };
+
+// BUSCA DE COMENTÁRIOS COM FILTRO
+
+export const searchComments = async (token: string, searchTerm: string, limit = 10) => {
+  try {
+    const response = await fetch(`http://localhost:3000/comments/search?q=${encodeURIComponent(searchTerm)}&limit=${limit}`, {  // Alterado para localhost
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao buscar comentários');
+    }
+
+    return await response.json(); // Retorna a lista de comentários filtrados
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao buscar comentários');
+    } else {
+      throw new Error('Erro inesperado ao buscar comentários');
+    }
+  }
+};
+

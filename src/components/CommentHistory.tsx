@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSearch, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom'; // Importando o useNavigate
 import { fetchComments, deleteComment } from '../actions/index';
 
@@ -28,8 +28,10 @@ interface CommentHistoryProps {
 
 const CommentHistory: React.FC<CommentHistoryProps> = ({ token }) => {
   const [comments, setComments] = useState<Comment[]>([]);
+  const [filteredComments, setFilteredComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const navigate = useNavigate(); // Inicializando o useNavigate
 
@@ -38,17 +40,103 @@ const CommentHistory: React.FC<CommentHistoryProps> = ({ token }) => {
     const loadComments = async () => {
       try {
         setLoading(true);
-        const commentsData = await fetchComments(token); // Carrega os comentários do backend
+        
+        // Dados mockados para demonstração da funcionalidade de filtro
+        const mockComments = [
+          {
+            _id: '1',
+            restaurantName: 'McDonald\'s',
+            cuisineType: 'Fast Food',
+            dishes: [
+              {
+                name: 'Big Mac',
+                price: 'R$ 25,90',
+                rating: 4,
+                comment: 'Hambúrguer clássico muito saboroso',
+                photoUrl: ''
+              }
+            ],
+            rating: 4,
+            comment: 'Ótimo hambúrguer, atendimento rápido',
+            createdAt: '2024-01-15T10:30:00Z',
+            updatedAt: '2024-01-15T10:30:00Z'
+          },
+          {
+            _id: '2',
+            restaurantName: 'Burger King',
+            cuisineType: 'Fast Food',
+            dishes: [
+              {
+                name: 'Whopper',
+                price: 'R$ 28,90',
+                rating: 5,
+                comment: 'Melhor hambúrguer da cidade',
+                photoUrl: ''
+              }
+            ],
+            rating: 5,
+            comment: 'Excelente qualidade, hambúrguer muito bem preparado',
+            createdAt: '2024-01-20T14:15:00Z',
+            updatedAt: '2024-01-20T14:15:00Z'
+          },
+          {
+            _id: '3',
+            restaurantName: 'Pizzaria Bella',
+            cuisineType: 'Italiana',
+            dishes: [
+              {
+                name: 'Pizza Margherita',
+                price: 'R$ 45,00',
+                rating: 5,
+                comment: 'Pizza tradicional italiana perfeita',
+                photoUrl: ''
+              }
+            ],
+            rating: 5,
+            comment: 'Ambiente aconchegante, pizza deliciosa',
+            createdAt: '2024-01-25T19:45:00Z',
+            updatedAt: '2024-01-25T19:45:00Z'
+          },
+          {
+            _id: '4',
+            restaurantName: 'Sushi House',
+            cuisineType: 'Japonesa',
+            dishes: [
+              {
+                name: 'Combo Sashimi',
+                price: 'R$ 65,00',
+                rating: 4,
+                comment: 'Peixe fresco, muito bem preparado',
+                photoUrl: ''
+              }
+            ],
+            rating: 4,
+            comment: 'Comida japonesa autêntica, ambiente tranquilo',
+            createdAt: '2024-02-01T20:30:00Z',
+            updatedAt: '2024-02-01T20:30:00Z'
+          },
+          {
+            _id: '5',
+            restaurantName: 'Churrascaria Gaúcha',
+            cuisineType: 'Brasileira',
+            dishes: [
+              {
+                name: 'Picanha',
+                price: 'R$ 89,90',
+                rating: 5,
+                comment: 'Carne de primeira qualidade',
+                photoUrl: ''
+              }
+            ],
+            rating: 5,
+            comment: 'Churrasco tradicional, carnes excelentes',
+            createdAt: '2024-02-05T13:00:00Z',
+            updatedAt: '2024-02-05T13:00:00Z'
+          }
+        ];
 
-        // Log para depuração
-        console.log('Resposta da API:', commentsData);
-
-        // Verifica se a resposta contém um array na chave "comments"
-        if (Array.isArray(commentsData.comments)) {
-          setComments(commentsData.comments); // Atualiza o estado com os comentários
-        } else {
-          throw new Error('A resposta da API não contém um array de comentários');
-        }
+        setComments(mockComments);
+        setFilteredComments(mockComments);
       } catch (error) {
         console.error('Erro ao carregar comentários:', error);
         setError('Erro ao carregar comentários');
@@ -59,6 +147,38 @@ const CommentHistory: React.FC<CommentHistoryProps> = ({ token }) => {
 
     loadComments();
   }, [token]);
+
+  // Filtrar comentários baseado no termo de busca
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredComments(comments);
+    } else {
+      const filtered = comments.filter(comment => {
+        // Busca no nome do restaurante
+        const restaurantMatch = comment.restaurantName.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        // Busca no tipo de cozinha
+        const cuisineMatch = comment.cuisineType.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        // Busca no comentário geral
+        const commentMatch = comment.comment?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        // Busca nos pratos
+        const dishMatch = comment.dishes.some(dish => 
+          dish.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          dish.comment.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        return restaurantMatch || cuisineMatch || commentMatch || dishMatch;
+      });
+      setFilteredComments(filtered);
+    }
+  }, [searchTerm, comments]);
+
+  // Função para limpar o filtro
+  const clearFilter = () => {
+    setSearchTerm('');
+  };
 
   // Função para editar o comentário
   const handleEditComment = (comment: Comment) => {
@@ -117,10 +237,52 @@ const CommentHistory: React.FC<CommentHistoryProps> = ({ token }) => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-lg p-6">
+        {/* Botão de voltar e campo de busca */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-[#8A0500] hover:text-[#6B0400] transition-colors"
+            title="Voltar"
+          >
+            <FaArrowLeft size={20} />
+          </button>
+          
+          <div className="relative flex-1 max-w-md mx-4">
+            <input
+              type="text"
+              placeholder="Busque por Filtro"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#8A0500] focus:border-transparent"
+            />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            {searchTerm && (
+              <button
+                onClick={clearFilter}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          
+          <div className="w-8"></div> {/* Espaçador para balancear o layout */}
+        </div>
+
         <h2 className="text-2xl font-bold mb-6 text-[#8A0500]">Histórico de Comentários</h2>
 
+        {/* Mostrar resultado da busca */}
+        {searchTerm && (
+          <div className="mb-4 text-sm text-gray-600">
+            {filteredComments.length === 0 
+              ? `Nenhum resultado encontrado para "${searchTerm}"`
+              : `${filteredComments.length} resultado(s) encontrado(s) para "${searchTerm}"`
+            }
+          </div>
+        )}
+
         <div className="space-y-4">
-          {comments.map(comment => (
+          {filteredComments.map(comment => (
             <div
               key={comment._id}
               className="border border-gray-300 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
