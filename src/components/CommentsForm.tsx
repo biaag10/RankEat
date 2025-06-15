@@ -17,11 +17,8 @@ const styles = {
   dishPrice: `w-fit bg-transparent border-none font-semibold text-gray-600 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-[#8A0500] p-1 mt-[-8px]`,
   commentBox: `w-full min-h-[60px] p-3 border border-gray-300 rounded-md resize-y text-sm font-sans`,
   starRating: `text-2xl select-none mb-3`,
-  btnGroup: `flex justify-center gap-4 mt-6`,
-  btn: `bg-[#8A0500] text-white font-bold py-3 px-8 rounded-md cursor-pointer hover:bg-[#a6331f] transition`,
   fileInput: `hidden`,
   removeBtn: `absolute top-2 right-2 bg-[#a6331f] hover:bg-[#8A0500] text-white rounded-full w-7 h-7 flex items-center justify-center text-xl font-bold cursor-pointer shadow`,
-  historyBtn: `absolute bottom-130 right-10 bg-[#8A0500] text-white font-bold py-3 px-6 rounded-md cursor-pointer hover:bg-[#a6331f] transition`,
 };
 
 type Dish = {
@@ -235,35 +232,37 @@ const CommentsForm: React.FC = () => {
         ))}
       </div>
 
-      <div className={styles.btnGroup}>
-        <button className={styles.btn} type="button" onClick={addDish}>
-          Adicionar Novo Prato
-        </button>
+      <div className="flex flex-col items-center mt-6"> {/* Main container for all buttons, centered vertically */}
+        <div className="flex flex-wrap justify-center gap-4 mb-4"> {/* Row for "Adicionar", "Remover", "Salvar" */} 
+          <button className="bg-[#8A0500] text-white font-bold py-2 px-6 rounded-md cursor-pointer hover:bg-[#a6331f] transition whitespace-nowrap" type="button" onClick={addDish}>
+            Adicionar Novo Prato
+          </button>
+          <button
+            className="bg-[#8A0500] text-white font-bold py-2 px-6 rounded-md cursor-pointer hover:bg-[#a6331f] transition whitespace-nowrap" 
+            type="button"
+            onClick={removeDish}
+            disabled={dishes.length === 0}
+            aria-disabled={dishes.length === 0}
+          >
+            Remover Prato
+          </button>
+          <button className="bg-[#8A0500] text-white font-bold py-2 px-6 rounded-md cursor-pointer hover:bg-[#a6331f] transition whitespace-nowrap" type="button" onClick={saveComment}>
+            {comment ? 'Atualizar Comentário' : 'Salvar Comentário'}
+          </button>
+        </div>
+
         <button
-          className={styles.btn}
+          className="bg-[#8A0500] text-white font-bold py-2 px-6 rounded-md cursor-pointer hover:bg-[#a6331f] transition whitespace-nowrap"
           type="button"
-          onClick={removeDish}
-          disabled={dishes.length === 0}
-          aria-disabled={dishes.length === 0}
+          onClick={goToCommentHistory}
         >
-          Remover Prato
+          Acessar Histórico de Comentários
         </button>
       </div>
-
-      <button className={styles.btn} type="button" style={{ marginTop: '40px' }} onClick={saveComment}>
-        {comment ? 'Atualizar Comentário' : 'Salvar Comentário'}
-      </button>
-
-      {/* Novo botão para acessar o histórico */}
-      <button 
-        className={styles.historyBtn} // Usando o estilo específico
-        type="button" 
-        onClick={goToCommentHistory} 
-      >
-        Acessar Histórico de Comentários
-      </button>
     </div>
   );
 };
 
 export default CommentsForm;
+
+
