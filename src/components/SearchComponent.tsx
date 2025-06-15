@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaStar, FaRegCommentDots } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
-import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions'; 
+import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions';
 import { notifyError, notifySuccess } from '../components/toasts/index';
 
 interface Restaurante {
@@ -24,28 +25,37 @@ interface SearchRestaurantsProps {
 }
 
 const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) => {
-  const [cep, setCep] = useState<string>('');
-  const [restaurants, setRestaurants] = useState<Restaurante[]>([]);
-  const [error, setError] = useState<string>('');
-  const [cepError, setCepError] = useState<string>('');
+  const [cep, setCep] = useState<string>('');  // Estado para o CEP
+  const [restaurants, setRestaurants] = useState<Restaurante[]>([]); 
+  const [allRestaurants, setAllRestaurants] = useState<Restaurante[]>([]); // Todos os restaurantes carregados
+  const [error, setError] = useState<string>(''); 
+  const [cepError, setCepError] = useState<string>('');  
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [maxRestaurants, setMaxRestaurants] = useState<number>(5); // Valor inicial para o número de restaurantes
+
+  const navigate = useNavigate();
 
   const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc=';
   const apiKeyGeocoding = 'AIzaSyBJaZFuZvi8axZBiwxYeEumv4gMP0ti54o';
 
+  const formatarCep = (inputCep: string) => {
+    const apenasNumeros = inputCep.replace(/\D/g, '');
+    if (apenasNumeros.length <= 5) {
+      return apenasNumeros;
+    }
+    return `${apenasNumeros.slice(0, 5)}-${apenasNumeros.slice(5, 8)}`;
+  };
+
   const validarCep = (inputCep: string) => {
-    const cepRegex = /^[0-9]{8}$/;
+    const cepRegex = /^[0-9]{5}-[0-9]{3}$/;
     if (!cepRegex.test(inputCep)) {
-      if (inputCep.length < 8) notifyError('O CEP deve conter 8 dígitos.');
-      // else setCepError('O CEP deve conter apenas números.');
-      notifyError('O CEP deve conter apenas números.');
+      setCepError('O CEP deve estar no formato correto (XXXXX-XXX).');
       return false;
     }
     setCepError('');
     return true;
   };
 
-  // Função para atualizar os favoritos do usuário no estado
   const atualizarFavoritos = async () => {
     try {
       const favoritos: Favorito[] = await fetchFavoritos(userId, token);
@@ -59,14 +69,10 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
 
   const buscarRestaurantesPorCep = async () => {
     setError('');
-    setRestaurants([]);
-
     if (!cep) {
-      // alert('Por favor, insira o CEP.');
       notifyError('Por favor, insira o CEP.');
       return;
     }
-
     if (!validarCep(cep)) return;
 
     try {
@@ -79,52 +85,40 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
         const longitude = data.results[0].geometry.location.lng;
 
         try {
-          await addHistorico(
-            {
-              cep,
-              latitude,
-              longitude,
-              userId,
-            },
-            token
-          );
-          console.log('Histórico salvo com sucesso');
+          await addHistorico({ cep, latitude, longitude, userId }, token);
         } catch (error) {
           console.error('Erro ao salvar histórico:', error);
         }
 
         await buscarRestaurantes(latitude, longitude);
-        await atualizarFavoritos(); // Atualiza favoritos após buscar restaurantes
+        await atualizarFavoritos();
       } else {
-        // setError('Não foi possível encontrar as coordenadas para esse CEP.');
         notifyError('Não foi possível encontrar as coordenadas para esse CEP.');
       }
     } catch (error) {
       console.error('Erro ao buscar coordenadas do CEP:', error);
-      // setError('Ocorreu um erro ao buscar o CEP.');
       notifyError('Ocorreu um erro ao buscar o CEP.');
     }
   };
 
   const buscarRestaurantes = async (latitude: number, longitude: number) => {
     try {
-      const endpoint = `https://api.foursquare.com/v3/places/search?ll=${latitude},${longitude}&radius=1000&limit=5&categories=13065`;
-
+      const fixedDistance = 5; // Distância cravada em 5 km
+      const endpoint = `https://api.foursquare.com/v3/places/search?ll=${latitude},${longitude}&radius=${fixedDistance * 1000}&limit=20&categories=13065`;
       const response = await axios.get(endpoint, {
         headers: { Authorization: apiKeyFoursquare },
       });
 
       if (response.data.results.length > 0) {
-        setRestaurants(response.data.results);
+        setAllRestaurants(response.data.results); // Armazenando todos os restaurantes
+        setRestaurants(response.data.results.slice(0, maxRestaurants)); // Exibindo apenas os primeiros "maxRestaurants"
         setError('');
       } else {
         setRestaurants([]);
-        // setError('Nenhum restaurante encontrado nas proximidades.');
         notifyError('Nenhum restaurante encontrado nas proximidades.');
       }
     } catch (error) {
       console.error('Erro ao buscar restaurantes:', error);
-      // setError('Ocorreu um erro ao buscar os restaurantes.');
       notifyError('Ocorreu um erro ao buscar os restaurantes.');
     }
   };
@@ -156,10 +150,16 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       }
     } catch (error) {
       console.error('Erro ao alterar favorito:', error);
-      // alert('Erro ao alterar favorito');
       notifyError('Erro ao alterar favorito');
     }
   };
+
+  // Atualiza a lista de restaurantes exibidos conforme o slider
+  useEffect(() => {
+    if (allRestaurants.length > 0) {
+      setRestaurants(allRestaurants.slice(0, maxRestaurants)); // Atualiza os restaurantes exibidos
+    }
+  }, [maxRestaurants, allRestaurants]); // Executa sempre que o maxRestaurants mudar
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-5">
@@ -169,15 +169,15 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
         <label htmlFor="cep" className="block text-lg mb-2">
           Digite o CEP:
         </label>
+
         <input
           type="text"
           id="cep"
           value={cep}
-          onChange={(e) => setCep(e.target.value)}
-          placeholder="Ex: 01001000"
+          onChange={(e) => setCep(formatarCep(e.target.value))}
+          placeholder="Ex: 01001-000"
           className="w-full p-2 border border-gray-300 rounded-md mb-4"
         />
-
         {cepError && <div className="text-red-500 text-sm mb-4">{cepError}</div>}
 
         <button
@@ -189,6 +189,28 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       </div>
 
       {error && <div className="mt-4 text-red-500">{error}</div>}
+
+      <div className="mt-6 w-full max-w-md">
+        <label htmlFor="maxRestaurants" className="block text-lg mb-2">
+          Número máximo de restaurantes:
+        </label>
+        <div className="flex justify-between items-center mb-4">
+          <span>1</span>
+          <input
+            type="range"
+            min="1"
+            max="20"
+            value={maxRestaurants}
+            onChange={(e) => setMaxRestaurants(Number(e.target.value))}
+            className="w-full mx-2 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer transition-all duration-300 ease-in-out"
+            style={{
+              background: `linear-gradient(to right, #f87171 ${((maxRestaurants - 1) / 19) * 100}%, #d1d5db ${((maxRestaurants - 1) / 19) * 100}%)`,
+            }}
+          />
+          <span>20</span>
+        </div>
+        <div className="text-center text-lg mt-2">Exibindo {maxRestaurants} Restaurantes</div>
+      </div>
 
       <div id="results" className="mt-6 w-full max-w-md">
         {restaurants.length > 0 ? (
@@ -202,7 +224,7 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
               return (
                 <div
                   key={restaurant.fsq_id}
-                  className="group p-4 bg-white rounded-md shadow-md border-2 border-red-600 hover:shadow-lg transition-shadow flex justify-between items-center"
+                  className="group p-4 bg-white rounded-md shadow-md border-2 border-red-600 hover:shadow-red-600 transition-all duration-300 flex justify-between items-center"
                 >
                   <div>
                     <a
@@ -218,14 +240,31 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
                     <p><strong>Distância:</strong> {(restaurant.distance / 1000).toFixed(2)} km</p>
                   </div>
 
-                  <div className="flex flex-col items-center gap-8">
-                    <FaMapMarkerAlt className="text-red-600 transition-transform duration-300 group-hover:scale-125 group-hover:-translate-y-1" size={24} />
+                  <div className="flex flex-col items-center gap-6">
+                    <FaMapMarkerAlt
+                      className="text-red-600 transition-transform duration-300 hover:scale-110"
+                      size={24}
+                    />
+
                     <button
                       aria-label={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                       onClick={() => toggleFavorite(restaurant)}
-                      className="focus:outline-none"
+                      className="focus:outline-none hover:scale-110 hover:shadow-lg transition-all duration-300"
                     >
                       <FaStar size={24} className={isFav ? 'text-yellow-400' : 'text-gray-400'} />
+                    </button>
+
+                    <button
+                      aria-label="Comentar"
+                      onClick={() =>
+                        navigate(`/comentarios/${restaurant.fsq_id}`, {
+                          state: { restaurantName: restaurant.name },
+                        })
+                      }
+                      className="text-blue-600 hover:text-blue-800 hover:scale-110 hover:shadow-lg transition-colors duration-300"
+                      title="Comentar"
+                    >
+                      <FaRegCommentDots size={22} />
                     </button>
                   </div>
                 </div>
