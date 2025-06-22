@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; // Importa o hook useNavigate
-import { addComment, updateComment } from '../actions';
+import { addComment, updateComment, uploadImage } from '../actions';
 import { notifyError, notifySuccess } from './toasts/index';
 
 const styles = {
@@ -17,7 +17,7 @@ const styles = {
   dishPrice: `w-fit bg-transparent border-none font-semibold text-gray-600 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-[#8A0500] p-1 mt-[-8px]`,
   commentBox: `w-full min-h-[60px] p-3 border border-gray-300 rounded-md resize-y text-sm font-sans`,
   starRating: `text-2xl select-none mb-3`,
-  fileInput: `hidden`,
+  fileInput: `opacity-0 absolute inset-0 w-full h-full cursor-pointer`,
   removeBtn: `absolute top-2 right-2 bg-[#a6331f] hover:bg-[#8A0500] text-white rounded-full w-7 h-7 flex items-center justify-center text-xl font-bold cursor-pointer shadow`,
 };
 
@@ -79,19 +79,36 @@ const CommentsForm: React.FC = () => {
     );
   };
 
-  const handleFileChange = (id: number, file: File | null) => {
+  const handleFileChange = async (id: number, file: File | null) => {
     if (!file) return;
 
-    const fileUrl = URL.createObjectURL(file);
-    setDishes((prev) =>
-      prev.map((dish) => {
-        if (dish.id === id) {
-          if (dish.fileObjectUrl) URL.revokeObjectURL(dish.fileObjectUrl);
-          return { ...dish, photoUrl: fileUrl, fileObjectUrl: fileUrl };
-        }
-        return dish;
-      })
-    );
+    try {
+      // Fazer upload da imagem para o backend
+      const uploadResult = await uploadImage(file);
+      
+      if (uploadResult.success) {
+        // Usar a URL retornada pelo backend
+        const imageUrl = `http://localhost:3000${uploadResult.imageUrl}`;
+        
+        setDishes((prev) =>
+          prev.map((dish) => {
+            if (dish.id === id) {
+              // Limpar URL anterior se existir
+              if (dish.fileObjectUrl) URL.revokeObjectURL(dish.fileObjectUrl);
+              return { ...dish, photoUrl: imageUrl, fileObjectUrl: undefined };
+            }
+            return dish;
+          })
+        );
+        
+        notifySuccess('Imagem carregada com sucesso!');
+      } else {
+        notifyError('Erro ao carregar imagem. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro no upload da imagem:', error);
+      notifyError('Erro ao carregar imagem. Tente novamente.');
+    }
   };
 
   const StarRating: React.FC<{

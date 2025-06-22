@@ -36,7 +36,7 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
   const navigate = useNavigate();
 
   const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc=';
-  const apiKeyGeocoding = 'AIzaSyBJaZFuZvi8axZBiwxYeEumv4gMP0ti54o';
+  const apiKeyGeocoding = 'AIzaSyAAHkNXFY5BU_EuxrrUMyzPYP_AxuZJuMg';
 
   const formatarCep = (inputCep: string) => {
     const apenasNumeros = inputCep.replace(/\D/g, '');

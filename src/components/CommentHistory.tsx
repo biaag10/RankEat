@@ -188,15 +188,28 @@ const CommentHistory: React.FC<CommentHistoryProps> = ({ token }) => {
 
               {comment.dishes.map((dish, index) => (
                 <div key={index} className="border-t pt-4 mt-4">
-                  <h4 className="font-semibold text-gray-800">Prato: {dish.name}</h4>
-                  <p className="text-gray-600 text-sm">Comentário: {dish.comment}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-800">Preço:</span>
-                    <span className="text-gray-600">{dish.price}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {renderStars(dish.rating)}
-                    <span className="text-sm text-gray-500">({dish.rating}/5)</span>
+                  <div className="flex gap-4">
+                    {dish.photoUrl && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={dish.photoUrl}
+                          alt={`Foto do prato ${dish.name}`}
+                          className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-grow">
+                      <h4 className="font-semibold text-gray-800">Prato: {dish.name}</h4>
+                      <p className="text-gray-600 text-sm">Comentário: {dish.comment}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-800">Preço:</span>
+                        <span className="text-gray-600">{dish.price}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {renderStars(dish.rating)}
+                        <span className="text-sm text-gray-500">({dish.rating}/5)</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -202,6 +202,33 @@ export const addHistorico = async (
   }
 };
 
+// UPLOAD DE IMAGEM
+
+export const uploadImage = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch('http://localhost:3000/upload-image', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao fazer upload da imagem');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao fazer upload da imagem');
+    } else {
+      throw new Error('Erro inesperado ao fazer upload da imagem');
+    }
+  }
+};
+
 // COMENTÁRIOS
 
 export const addComment = async (
