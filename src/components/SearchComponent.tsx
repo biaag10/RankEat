@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaMapMarkerAlt, FaStar, FaRegCommentDots } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaStar, FaRegCommentDots, FaSearch, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions';
@@ -25,18 +25,37 @@ interface SearchRestaurantsProps {
 }
 
 const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) => {
-  const [cep, setCep] = useState<string>('');  // Estado para o CEP
-  const [restaurants, setRestaurants] = useState<Restaurante[]>([]); 
-  const [allRestaurants, setAllRestaurants] = useState<Restaurante[]>([]); // Todos os restaurantes carregados
-  const [error, setError] = useState<string>(''); 
-  const [cepError, setCepError] = useState<string>('');  
+  // Estados iniciais carregando do localStorage quando disponível
+  const [cep, setCep] = useState<string>(localStorage.getItem('cep') || '');
+  const [restaurants, setRestaurants] = useState<Restaurante[]>(() => {
+    const storedRestaurants = localStorage.getItem('restaurants');
+    return storedRestaurants ? JSON.parse(storedRestaurants) : [];
+  });
+  const [allRestaurants, setAllRestaurants] = useState<Restaurante[]>(() => {
+    const storedRestaurants = localStorage.getItem('restaurants');
+    return storedRestaurants ? JSON.parse(storedRestaurants) : [];
+  });
+  const [error, setError] = useState<string>('');
+  const [cepError, setCepError] = useState<string>('');
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
-  const [maxRestaurants, setMaxRestaurants] = useState<number>(5); // Valor inicial para o número de restaurantes
+  const [sliderValue, setSliderValue] = useState<number>(() => {
+    return Number(localStorage.getItem('sliderValue')) || 5;
+  });
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
   const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc=';
   const apiKeyGeocoding = 'AIzaSyAAHkNXFY5BU_EuxrrUMyzPYP_AxuZJuMg';
+
+  // Função para limpar a busca
+  const limparBusca = () => {
+    setRestaurants([]);
+    setAllRestaurants([]);
+    setSliderValue(5);
+    localStorage.removeItem('restaurants');
+    localStorage.setItem('sliderValue', '5');
+  };
 
   const formatarCep = (inputCep: string) => {
     const apenasNumeros = inputCep.replace(/\D/g, '');
@@ -68,12 +87,21 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
   };
 
   const buscarRestaurantesPorCep = async () => {
+    setIsSearching(true);
     setError('');
     if (!cep) {
       notifyError('Por favor, insira o CEP.');
+      setIsSearching(false);
       return;
     }
-    if (!validarCep(cep)) return;
+    if (!validarCep(cep)) {
+      setIsSearching(false);
+      return;
+    }
+
+    // Resetar slider para 5 em uma nova busca
+    setSliderValue(5);
+    localStorage.setItem('sliderValue', '5');
 
     try {
       const geocodingEndpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${cep}&key=${apiKeyGeocoding}`;
@@ -98,23 +126,27 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
     } catch (error) {
       console.error('Erro ao buscar coordenadas do CEP:', error);
       notifyError('Ocorreu um erro ao buscar o CEP.');
+    } finally {
+      setIsSearching(false);
     }
   };
 
   const buscarRestaurantes = async (latitude: number, longitude: number) => {
     try {
-      const fixedDistance = 5; // Distância cravada em 5 km
+      const fixedDistance = 5; // Distância fixa em 5 km
       const endpoint = `https://api.foursquare.com/v3/places/search?ll=${latitude},${longitude}&radius=${fixedDistance * 1000}&limit=20&categories=13065`;
       const response = await axios.get(endpoint, {
         headers: { Authorization: apiKeyFoursquare },
       });
 
       if (response.data.results.length > 0) {
-        setAllRestaurants(response.data.results); // Armazenando todos os restaurantes
-        setRestaurants(response.data.results.slice(0, maxRestaurants)); // Exibindo apenas os primeiros "maxRestaurants"
+        setAllRestaurants(response.data.results);
+        setRestaurants(response.data.results.slice(0, sliderValue));
         setError('');
+        // Persistir restaurantes no localStorage
+        localStorage.setItem('restaurants', JSON.stringify(response.data.results));
       } else {
-        setRestaurants([]);
+        limparBusca(); // Usa a função de limpar para manter a consistência
         notifyError('Nenhum restaurante encontrado nas proximidades.');
       }
     } catch (error) {
@@ -154,12 +186,14 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
     }
   };
 
-  // Atualiza a lista de restaurantes exibidos conforme o slider
+  // Atualizar restaurantes exibidos quando o slider muda
   useEffect(() => {
     if (allRestaurants.length > 0) {
-      setRestaurants(allRestaurants.slice(0, maxRestaurants)); // Atualiza os restaurantes exibidos
+      const slicedRestaurants = allRestaurants.slice(0, sliderValue);
+      setRestaurants(slicedRestaurants);
+      localStorage.setItem('sliderValue', sliderValue.toString());
     }
-  }, [maxRestaurants, allRestaurants]); // Executa sempre que o maxRestaurants mudar
+  }, [sliderValue, allRestaurants]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-5">
@@ -174,18 +208,59 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
           type="text"
           id="cep"
           value={cep}
-          onChange={(e) => setCep(formatarCep(e.target.value))}
+          onChange={(e) => {
+            const formattedCep = formatarCep(e.target.value);
+            setCep(formattedCep);
+            localStorage.setItem('cep', formattedCep);
+          }}
           placeholder="Ex: 01001-000"
           className="w-full p-2 border border-gray-300 rounded-md mb-4"
         />
         {cepError && <div className="text-red-500 text-sm mb-4">{cepError}</div>}
 
-        <button
-          onClick={buscarRestaurantesPorCep}
-          className="w-full p-2 bg-red-700 text-white rounded-md hover:bg-red-600"
-        >
-          Buscar Restaurantes
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={buscarRestaurantesPorCep}
+            disabled={isSearching}
+            className={`flex-1 p-2 text-white rounded-md transition-colors flex items-center justify-center ${
+              isSearching 
+                ? 'bg-red-600 cursor-not-allowed' 
+                : allRestaurants.length > 0 
+                  ? 'bg-orange-600 hover:bg-orange-700' 
+                  : 'bg-red-700 hover:bg-red-600'
+            }`}
+          >
+            {isSearching ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Buscando...
+              </>
+            ) : allRestaurants.length > 0 ? (
+              <>
+                <FaSearch className="mr-2" />
+                Nova Busca
+              </>
+            ) : (
+              <>
+                <FaSearch className="mr-2" />
+                Buscar Restaurantes
+              </>
+            )}
+          </button>
+
+          {allRestaurants.length > 0 && (
+            <button
+              onClick={limparBusca}
+              className="p-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 flex items-center justify-center"
+              title="Limpar busca"
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <div className="mt-4 text-red-500">{error}</div>}
@@ -200,16 +275,16 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
             type="range"
             min="1"
             max="20"
-            value={maxRestaurants}
-            onChange={(e) => setMaxRestaurants(Number(e.target.value))}
+            value={sliderValue}
+            onChange={(e) => setSliderValue(Number(e.target.value))}
             className="w-full mx-2 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer transition-all duration-300 ease-in-out"
             style={{
-              background: `linear-gradient(to right, #f87171 ${((maxRestaurants - 1) / 19) * 100}%, #d1d5db ${((maxRestaurants - 1) / 19) * 100}%)`,
+              background: `linear-gradient(to right, #f87171 ${((sliderValue - 1) / 19) * 100}%, #d1d5db ${((sliderValue - 1) / 19) * 100}%)`,
             }}
           />
           <span>20</span>
         </div>
-        <div className="text-center text-lg mt-2">Exibindo {maxRestaurants} Restaurantes</div>
+        <div className="text-center text-lg mt-2">Exibindo {sliderValue} Restaurantes</div>
       </div>
 
       <div id="results" className="mt-6 w-full max-w-md">

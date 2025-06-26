@@ -58,7 +58,7 @@ const Footer = () => {
             alt="Rafael Althabia"
             className="w-12 h-12 rounded-full"
           />
-          <p className="text-sm">Rafael Althabia</p>
+          <p className="text-sm">Rafael Athaliba</p>
         </a>
       </div>
     </footer>
