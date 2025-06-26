@@ -16,41 +16,51 @@ import CommentsForm from './components/CommentsForm';
 import CommentHistory from './components/CommentHistory';
 
 function App() {
-  console.log('App renderizado');
-
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  console.log('Estado inicial: token:', token, ', userId:', userId, ', loadingAuth:', loadingAuth);
-
   useEffect(() => {
-    console.log('useEffect: começando a carregar token e userId do localStorage...');
-    const savedToken = localStorage.getItem('token');
-    const savedUserId = localStorage.getItem('userId');
+    // Verifica se o token está expirado
+    const checkTokenExpiration = () => {
+      const savedToken = localStorage.getItem('token');
+      const savedUserId = localStorage.getItem('userId');
+      const tokenExpiration = localStorage.getItem('tokenExpiration'); // Hora de expiração do token
 
-    console.log('useEffect: token do localStorage:', savedToken);
-    console.log('useEffect: userId do localStorage:', savedUserId);
+      if (savedToken && savedUserId && tokenExpiration) {
+        const currentTime = Date.now();
 
-    if (savedToken && savedUserId) {
-      console.log('useEffect: token e userId encontrados, atualizando estado...');
-      setToken(savedToken);
-      setUserId(savedUserId);
-    } else {
-      console.log('useEffect: nenhum token ou userId encontrado');
-    }
+        // Verifica se o token expirou
+        if (currentTime > parseInt(tokenExpiration)) {
+          // Token expirado
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('tokenExpiration');
+          setToken(null);
+          setUserId(null);
+          notifySuccess('Sua sessão expirou. Faça login novamente.');
+        } else {
+          // Token válido
+          setToken(savedToken);
+          setUserId(savedUserId);
+        }
+      } else {
+        setToken(null);
+        setUserId(null);
+      }
 
-    setLoadingAuth(false);
-    console.log('useEffect: carregamento auth finalizado, loadingAuth setado para false');
+      setLoadingAuth(false);
+    };
+
+    checkTokenExpiration();
   }, []);
 
   const handleLoginSuccess = (newToken: string, newUserId: string) => {
-    console.log('handleLoginSuccess: login bem-sucedido');
-    console.log('handleLoginSuccess: salvando token e userId no localStorage...');
+    // Salva o token e a data de expiração (1 hora a partir de agora)
+    const expirationTime = Date.now() + 3600000; // 1 hora em milissegundos
     localStorage.setItem('token', newToken);
     localStorage.setItem('userId', newUserId);
-    console.log('handleLoginSuccess: token salvo:', newToken);
-    console.log('handleLoginSuccess: userId salvo:', newUserId);
+    localStorage.setItem('tokenExpiration', expirationTime.toString());
 
     setToken(newToken);
     setUserId(newUserId);
@@ -58,17 +68,14 @@ function App() {
 
   const handleLogout = () => {
     notifySuccess('Você foi deslogado com sucesso!');
-    console.log('handleLogout: limpando localStorage e estado...');
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('tokenExpiration');
     setToken(null);
     setUserId(null);
   };
 
-  console.log('Render final: token:', token, ', userId:', userId, ', loadingAuth:', loadingAuth);
-
   if (loadingAuth) {
-    console.log('Renderizando loadingAuth...');
     return (
       <div className="flex justify-center items-center min-h-screen">
         <p>Carregando autenticação...</p>
@@ -103,10 +110,8 @@ function App() {
               />
               <Route path="/historico" element={<History token={token} />} />
               <Route path="/sobre" element={<AboutSection />} />
-
               <Route path="/diario" element={<CommentsForm />} />
               <Route path="/historico-diario" element={<CommentHistory token={token} />} />
-
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}

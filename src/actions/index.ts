@@ -1,5 +1,7 @@
 // LOGIN
 
+import axios from "axios";
+
 export const loginUser = async (emailOrUsername: string, password: string) => {
   try {
     const response = await fetch('http://localhost:3000/users/login', {  // Alterado para localhost
@@ -382,3 +384,28 @@ export const searchComments = async (token: string, searchTerm: string, limit = 
   }
 };
 
+// Buscar coordenadas de um CEP
+export const buscarCoordenadasPorCep = async (cep: string) => {
+  try {
+    const response = await axios.get('http://localhost:3000/geocode', {
+      params: { cep },
+    });
+    return response.data; // Retorna latitude e longitude
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    throw new Error('Erro ao buscar coordenadas do CEP.');
+  }
+};
+
+// Buscar restaurantes utilizando as coordenadas (latitude e longitude)
+export const buscarRestaurantes = async (latitude: number, longitude: number) => {
+  try {
+    const response = await axios.get('http://localhost:3000/restaurants', {
+      params: { latitude, longitude },
+    });
+    return response.data.results; // Retorna a lista de restaurantes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    throw new Error('Erro ao buscar restaurantes.');
+  }
+};

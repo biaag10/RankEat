@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { FaMapMarkerAlt, FaStar, FaRegCommentDots, FaSearch, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-import { addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions';
+import { buscarCoordenadasPorCep, buscarRestaurantes, addFavorito, removeFavorito, addHistorico, fetchFavoritos } from '../actions';
 import { notifyError, notifySuccess } from '../components/toasts/index';
 
 interface Restaurante {
@@ -25,7 +24,6 @@ interface SearchRestaurantsProps {
 }
 
 const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) => {
-  // Estados iniciais carregando do localStorage quando disponível
   const [cep, setCep] = useState<string>(localStorage.getItem('cep') || '');
   const [restaurants, setRestaurants] = useState<Restaurante[]>(() => {
     const storedRestaurants = localStorage.getItem('restaurants');
@@ -44,9 +42,6 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
-  const apiKeyFoursquare = 'fsq3lB+7CQYRL4TDNQ0lkCOQ8Cb9fWpRXrYiWUSSvYlsysc=';
-  const apiKeyGeocoding = 'AIzaSyAAHkNXFY5BU_EuxrrUMyzPYP_AxuZJuMg';
 
   // Função para limpar a busca
   const limparBusca = () => {
@@ -86,7 +81,8 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
     }
   };
 
-  const buscarRestaurantesPorCep = async () => {
+  // Função que faz a requisição para o back-end buscar coordenadas
+  const buscarCoordenadasErestaurantes = async () => {
     setIsSearching(true);
     setError('');
     if (!cep) {
@@ -99,59 +95,22 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       return;
     }
 
-    // Resetar slider para 5 em uma nova busca
     setSliderValue(5);
     localStorage.setItem('sliderValue', '5');
 
     try {
-      const geocodingEndpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${cep}&key=${apiKeyGeocoding}`;
-      const geocodingResponse = await axios.get(geocodingEndpoint);
-      const data = geocodingResponse.data;
-
-      if (data.status === 'OK' && data.results.length > 0) {
-        const latitude = data.results[0].geometry.location.lat;
-        const longitude = data.results[0].geometry.location.lng;
-
-        try {
-          await addHistorico({ cep, latitude, longitude, userId }, token);
-        } catch (error) {
-          console.error('Erro ao salvar histórico:', error);
-        }
-
-        await buscarRestaurantes(latitude, longitude);
-        await atualizarFavoritos();
-      } else {
-        notifyError('Não foi possível encontrar as coordenadas para esse CEP.');
-      }
+      const { latitude, longitude } = await buscarCoordenadasPorCep(cep);
+      // Chama a função para buscar restaurantes
+      const restaurantsData = await buscarRestaurantes(latitude, longitude);
+      setAllRestaurants(restaurantsData);
+      setRestaurants(restaurantsData.slice(0, sliderValue));
+      await addHistorico({ cep, latitude, longitude, userId }, token);
+      await atualizarFavoritos();
     } catch (error) {
-      console.error('Erro ao buscar coordenadas do CEP:', error);
-      notifyError('Ocorreu um erro ao buscar o CEP.');
+      console.error('Erro ao buscar coordenadas ou restaurantes:', error);
+      notifyError('Ocorreu um erro ao buscar o CEP ou os restaurantes.');
     } finally {
       setIsSearching(false);
-    }
-  };
-
-  const buscarRestaurantes = async (latitude: number, longitude: number) => {
-    try {
-      const fixedDistance = 5; // Distância fixa em 5 km
-      const endpoint = `https://api.foursquare.com/v3/places/search?ll=${latitude},${longitude}&radius=${fixedDistance * 1000}&limit=20&categories=13065`;
-      const response = await axios.get(endpoint, {
-        headers: { Authorization: apiKeyFoursquare },
-      });
-
-      if (response.data.results.length > 0) {
-        setAllRestaurants(response.data.results);
-        setRestaurants(response.data.results.slice(0, sliderValue));
-        setError('');
-        // Persistir restaurantes no localStorage
-        localStorage.setItem('restaurants', JSON.stringify(response.data.results));
-      } else {
-        limparBusca(); // Usa a função de limpar para manter a consistência
-        notifyError('Nenhum restaurante encontrado nas proximidades.');
-      }
-    } catch (error) {
-      console.error('Erro ao buscar restaurantes:', error);
-      notifyError('Ocorreu um erro ao buscar os restaurantes.');
     }
   };
 
@@ -220,14 +179,14 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
 
         <div className="flex gap-2">
           <button
-            onClick={buscarRestaurantesPorCep}
+            onClick={buscarCoordenadasErestaurantes} // Chama a função de buscar coordenadas do CEP
             disabled={isSearching}
             className={`flex-1 p-2 text-white rounded-md transition-colors flex items-center justify-center ${
-              isSearching 
-                ? 'bg-red-600 cursor-not-allowed' 
-                : allRestaurants.length > 0 
-                  ? 'bg-orange-600 hover:bg-orange-700' 
-                  : 'bg-red-700 hover:bg-red-600'
+              isSearching
+                ? 'bg-red-600 cursor-not-allowed'
+                : allRestaurants.length > 0
+                ? 'bg-orange-600 hover:bg-orange-700'
+                : 'bg-red-700 hover:bg-red-600'
             }`}
           >
             {isSearching ? (
