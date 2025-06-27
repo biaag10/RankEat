@@ -89,6 +89,9 @@ function App() {
       <Header onLogout={handleLogout} isLoggedIn={!!token} />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
+          {/* Rota para a página Sobre - acessível sem login */}
+          <Route path="/sobre" element={<AboutSection />} />
+
           {!token ? (
             <>
               <Route
@@ -96,6 +99,7 @@ function App() {
                 element={<Login onLoginSuccess={handleLoginSuccess} />}
               />
               <Route path="/register" element={<Register />} />
+              {/* Redireciona para login se não houver token e a rota não for /sobre */}
               <Route path="*" element={<Navigate to="/login" replace />} />
             </>
           ) : (
@@ -109,7 +113,6 @@ function App() {
                 element={<Favorites userId={userId!} token={token} />}
               />
               <Route path="/historico" element={<History token={token} />} />
-              <Route path="/sobre" element={<AboutSection />} />
               <Route path="/diario" element={<CommentsForm />} />
               <Route path="/historico-diario" element={<CommentHistory token={token} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -123,3 +126,5 @@ function App() {
 }
 
 export default App;
+
+
