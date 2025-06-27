@@ -1,8 +1,10 @@
 // LOGIN
 
+import axios from "axios";
+
 export const loginUser = async (emailOrUsername: string, password: string) => {
   try {
-    const response = await fetch('https://backend-rankeat.vercel.app/users/login', {
+    const response = await fetch('http://localhost:3000/users/login', {  // Alterado para localhost
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +34,7 @@ export const loginUser = async (emailOrUsername: string, password: string) => {
 
 export const registerUser = async (name: string, username: string, email: string, password: string) => {
   try {
-    const response = await fetch('https://backend-rankeat.vercel.app/users/register', {
+    const response = await fetch('http://localhost:3000/users/register', {  // Alterado para localhost
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,13 +61,12 @@ export const registerUser = async (name: string, username: string, email: string
 
 export const fetchFavoritos = async (userId: string, token: string) => {
   try {
-    const response = await fetch(`https://backend-rankeat.vercel.app/favorites/${userId}`, {
+    const response = await fetch(`http://localhost:3000/favorites/${userId}`, {  // Alterado para localhost
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Erro ao buscar favoritos');
@@ -91,7 +92,7 @@ export const addFavorito = async (
   token: string
 ) => {
   try {
-    const response = await fetch(`https://backend-rankeat.vercel.app/favorites`, {
+    const response = await fetch(`http://localhost:3000/favorites`, {  // Alterado para localhost
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -121,7 +122,7 @@ export const removeFavorito = async (
   token: string
 ) => {
   try {
-    const response = await fetch(`https://backend-rankeat.vercel.app/favorites/${userId}/${restaurantId}`, {
+    const response = await fetch(`http://localhost:3000/favorites/${userId}/${restaurantId}`, {  // Alterado para localhost
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -147,7 +148,7 @@ export const removeFavorito = async (
 
 export const fetchHistorico = async (token: string, limit = 10) => {
   try {
-    const response = await fetch(`https://backend-rankeat.vercel.app/search-history?limit=${limit}`, {
+    const response = await fetch(`http://localhost:3000/search-history?limit=${limit}`, {  // Alterado para localhost
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -168,7 +169,6 @@ export const fetchHistorico = async (token: string, limit = 10) => {
   }
 };
 
-
 export const addHistorico = async (
   buscaData: {
     cep: string;
@@ -180,7 +180,7 @@ export const addHistorico = async (
   token: string
 ) => {
   try {
-    const response = await fetch(`https://backend-rankeat.vercel.app/search-history`, {
+    const response = await fetch(`http://localhost:3000/search-history`, {  // Alterado para localhost
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -204,4 +204,208 @@ export const addHistorico = async (
   }
 };
 
+// UPLOAD DE IMAGEM
 
+export const uploadImage = async (file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch('http://localhost:3000/upload-image', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao fazer upload da imagem');
+    }
+
+    return await response.json();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao fazer upload da imagem');
+    } else {
+      throw new Error('Erro inesperado ao fazer upload da imagem');
+    }
+  }
+};
+
+// COMENTÁRIOS
+
+export const addComment = async (
+  commentData: {
+    restaurantName: string;
+    cuisineType: string;
+    dishes: {
+      name: string;
+      price: string;
+      rating: number;
+      comment: string;
+      photoUrl?: string;
+    }[]; 
+  },
+  token: string
+) => {
+  try {
+    const response = await fetch('http://localhost:3000/comments/create', {  // Alterado para localhost
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(commentData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao salvar comentário');
+    }
+
+    return await response.json(); // Retorna o comentário salvo
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao salvar comentário');
+    } else {
+      throw new Error('Erro inesperado ao salvar comentário');
+    }
+  }
+};
+
+export const fetchComments = async (token: string, limit = 10) => {
+  try {
+    const response = await fetch(`http://localhost:3000/comments/list?limit=${limit}`, {  // Alterado para localhost
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao buscar comentários');
+    }
+
+    return await response.json(); // Retorna a lista de comentários
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao buscar comentários');
+    } else {
+      throw new Error('Erro inesperado ao buscar comentários');
+    }
+  }
+};
+
+export const updateComment = async (
+  commentId: string,
+  updatedCommentData: {
+    restaurantName: string;
+    cuisineType: string;
+    dishes: {
+      name: string;
+      price: string;
+      rating: number;
+      comment: string;
+      photoUrl?: string;
+    }[]; 
+  },
+  token: string
+) => {
+  try {
+    const response = await fetch(`http://localhost:3000/comments/update/${commentId}`, {  // Alterado para localhost
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedCommentData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao editar comentário');
+    }
+
+    return await response.json(); // Retorna o comentário atualizado
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao editar comentário');
+    } else {
+      throw new Error('Erro inesperado ao editar comentário');
+    }
+  }
+};
+
+export const deleteComment = async (commentId: string, token: string) => {
+  try {
+    const response = await fetch(`http://localhost:3000/comments/delete/${commentId}`, {  // Alterado para localhost
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao excluir comentário');
+    }
+
+    return await response.json(); // Retorna a confirmação de que o comentário foi deletado
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao excluir comentário');
+    } else {
+      throw new Error('Erro inesperado ao excluir comentário');
+    }
+  }
+};
+
+// BUSCA DE COMENTÁRIOS COM FILTRO
+
+export const searchComments = async (token: string, searchTerm: string, limit = 10) => {
+  try {
+    const response = await fetch(`http://localhost:3000/comments/search?q=${encodeURIComponent(searchTerm)}&limit=${limit}`, {  // Alterado para localhost
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao buscar comentários');
+    }
+
+    return await response.json(); // Retorna a lista de comentários filtrados
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message || 'Erro inesperado ao buscar comentários');
+    } else {
+      throw new Error('Erro inesperado ao buscar comentários');
+    }
+  }
+};
+
+// Buscar coordenadas de um CEP
+export const buscarCoordenadasPorCep = async (cep: string) => {
+  try {
+    const response = await axios.get('http://localhost:3000/geocode', {
+      params: { cep },
+    });
+    return response.data; // Retorna latitude e longitude
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    throw new Error('Erro ao buscar coordenadas do CEP.');
+  }
+};
+
+// Buscar restaurantes utilizando as coordenadas (latitude e longitude)
+export const buscarRestaurantes = async (latitude: number, longitude: number) => {
+  try {
+    const response = await axios.get('http://localhost:3000/restaurants', {
+      params: { latitude, longitude },
+    });
+    return response.data.results; // Retorna a lista de restaurantes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    throw new Error('Erro ao buscar restaurantes.');
+  }
+};

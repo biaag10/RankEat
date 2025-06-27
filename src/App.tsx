@@ -13,7 +13,8 @@ import SearchComponent from './components/SearchComponent';
 import Favorites from './components/Favorites';
 import History from './components/History';
 import AboutSection from './components/AboutSection';
-import RestaurantComments from './components/RestaurantComments'; 
+import CommentsForm from './components/CommentsForm'; 
+import CommentHistory from './components/CommentHistory';
 
 function App() {
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -21,20 +22,47 @@ function App() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUserId = localStorage.getItem('userId');
+    // Verifica se o token está expirado
+    const checkTokenExpiration = () => {
+      const savedToken = localStorage.getItem('token');
+      const savedUserId = localStorage.getItem('userId');
+      const tokenExpiration = localStorage.getItem('tokenExpiration'); // Hora de expiração do token
 
-    if (savedToken && savedUserId) {
-      setToken(savedToken);
-      setUserId(savedUserId);
-    }
+      if (savedToken && savedUserId && tokenExpiration) {
+        const currentTime = Date.now();
 
-    setLoadingAuth(false);
+        // Verifica se o token expirou
+        if (currentTime > parseInt(tokenExpiration)) {
+          // Token expirado
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('tokenExpiration');
+          setToken(null);
+          setUserId(null);
+          notifySuccess('Sua sessão expirou. Faça login novamente.');
+        } else {
+          // Token válido
+          setToken(savedToken);
+          setUserId(savedUserId);
+        }
+      } else {
+        setToken(null);
+        setUserId(null);
+      }
+
+      setLoadingAuth(false);
+    };
+
+    checkTokenExpiration();
   }, []);
 
   const handleLoginSuccess = (newToken: string, newUserId: string) => {
+    // Salva o token e a data de expiração (1 hora a partir de agora)
+    const expirationTime = Date.now() + 3600000; // 1 hora em milissegundos
     localStorage.setItem('token', newToken);
     localStorage.setItem('userId', newUserId);
+    localStorage.setItem('tokenExpiration', expirationTime.toString());
+
     setToken(newToken);
     setUserId(newUserId);
   };
@@ -43,6 +71,7 @@ function App() {
     notifySuccess('Você foi deslogado com sucesso!');
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('tokenExpiration');
     setToken(null);
     setUserId(null);
   };
@@ -61,6 +90,9 @@ function App() {
       <Header onLogout={handleLogout} isLoggedIn={!!token} />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
+          {/* Rota para a página Sobre - acessível sem login */}
+          <Route path="/sobre" element={<AboutSection />} />
+
           {!token ? (
             <>
               <Route
@@ -68,32 +100,22 @@ function App() {
                 element={<Login onLoginSuccess={handleLoginSuccess} />}
               />
               <Route path="/register" element={<Register />} />
+              {/* Redireciona para login se não houver token e a rota não for /sobre */}
               <Route path="*" element={<Navigate to="/login" replace />} />
             </>
           ) : (
             <>
               <Route
                 path="/"
-                element={
-                  <SearchComponent
-                    userId={userId!}
-                    token={token}
-                  />
-                }
+                element={<SearchComponent userId={userId!} token={token} />}
               />
               <Route
                 path="/favoritos"
                 element={<Favorites userId={userId!} token={token} />}
               />
-              <Route
-                path="/historico"
-                element={<History token={token} />}
-              />
-              <Route
-                path="/comentarios/:id"
-                element={<RestaurantComments token={token} userId={userId!} />}
-              />
-              <Route path="/sobre" element={<AboutSection />} />
+              <Route path="/historico" element={<History token={token} />} />
+              <Route path="/diario" element={<CommentsForm />} />
+              <Route path="/historico-diario" element={<CommentHistory token={token} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
@@ -105,3 +127,5 @@ function App() {
 }
 
 export default App;
+
+

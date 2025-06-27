@@ -43,28 +43,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
               HISTÓRICO
             </button>
 
+            {/* Botão DIÁRIO */}
             <button
-              onClick={() => navigate('/comentarios')}
+              onClick={() => navigate('/diario')}
               className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
             >
-              COMENTÁRIOS
-            </button>
-
-            <button
-              onClick={() => navigate('/sobre')}
-              className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
-            >
-              SOBRE
-            </button>
-
-            <button
-              onClick={() => {
-                onLogout();
-                navigate('/login');
-              }}
-              className="text-white text-xl font-bold cursor-pointer hover:text-red-600 transition-colors"
-            >
-              SAIR
+              DIÁRIO
             </button>
           </>
         ) : (
@@ -83,9 +67,29 @@ const Header: React.FC<HeaderProps> = ({ onLogout, isLoggedIn }) => {
             </button>
           </>
         )}
+        {/* Botão SOBRE - visível sempre */}
+        <button
+          onClick={() => navigate('/sobre')}
+          className="text-white text-xl font-bold cursor-pointer hover:text-red-300 transition-colors"
+        >
+          SOBRE
+        </button>
+        {isLoggedIn && (
+          <button
+            onClick={() => {
+              onLogout();
+              navigate('/login');
+            }}
+            className="text-white text-xl font-bold cursor-pointer hover:text-red-600 transition-colors"
+          >
+            SAIR
+          </button>
+        )}
       </nav>
     </header>
   );
 };
 
 export default Header;
+
+
