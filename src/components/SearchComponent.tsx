@@ -24,32 +24,50 @@ interface SearchRestaurantsProps {
 }
 
 const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) => {
-  const [cep, setCep] = useState<string>(localStorage.getItem('cep') || '');
+  // Carrega dados do localStorage ou usa valores padrão
+  const [cep, setCep] = useState<string>(localStorage.getItem('lastCep') || '');
   const [restaurants, setRestaurants] = useState<Restaurante[]>(() => {
-    const storedRestaurants = localStorage.getItem('restaurants');
-    return storedRestaurants ? JSON.parse(storedRestaurants) : [];
+    const stored = localStorage.getItem('lastRestaurants');
+    return stored ? JSON.parse(stored) : [];
   });
   const [allRestaurants, setAllRestaurants] = useState<Restaurante[]>(() => {
-    const storedRestaurants = localStorage.getItem('restaurants');
-    return storedRestaurants ? JSON.parse(storedRestaurants) : [];
+    const stored = localStorage.getItem('allRestaurants');
+    return stored ? JSON.parse(stored) : [];
   });
   const [error, setError] = useState<string>('');
   const [cepError, setCepError] = useState<string>('');
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [sliderValue, setSliderValue] = useState<number>(() => {
-    return Number(localStorage.getItem('sliderValue')) || 5;
+    const stored = localStorage.getItem('lastSliderValue');
+    return stored ? parseInt(stored) : 5;
   });
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
   const navigate = useNavigate();
+
+  // Carrega os dados salvos quando o componente monta
+  useEffect(() => {
+    const loadSavedData = async () => {
+      // Se temos restaurantes salvos, carregamos eles
+      if (allRestaurants.length > 0) {
+        setRestaurants(allRestaurants.slice(0, sliderValue));
+        await atualizarFavoritos();
+      }
+    };
+
+    loadSavedData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Função para limpar a busca
   const limparBusca = () => {
     setRestaurants([]);
     setAllRestaurants([]);
     setSliderValue(5);
-    localStorage.removeItem('restaurants');
-    localStorage.setItem('sliderValue', '5');
+    setCep('');
+    localStorage.removeItem('lastRestaurants');
+    localStorage.removeItem('allRestaurants');
+    localStorage.removeItem('lastSliderValue');
+    localStorage.removeItem('lastCep');
   };
 
   const formatarCep = (inputCep: string) => {
@@ -95,15 +113,18 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
       return;
     }
 
-    setSliderValue(5);
-    localStorage.setItem('sliderValue', '5');
-
     try {
       const { latitude, longitude } = await buscarCoordenadasPorCep(cep);
-      // Chama a função para buscar restaurantes
       const restaurantsData = await buscarRestaurantes(latitude, longitude);
+      
+      // Salva os dados no estado e no localStorage
       setAllRestaurants(restaurantsData);
       setRestaurants(restaurantsData.slice(0, sliderValue));
+      localStorage.setItem('lastRestaurants', JSON.stringify(restaurantsData.slice(0, sliderValue)));
+      localStorage.setItem('allRestaurants', JSON.stringify(restaurantsData));
+      localStorage.setItem('lastSliderValue', sliderValue.toString());
+      localStorage.setItem('lastCep', cep);
+      
       await addHistorico({ cep, latitude, longitude, userId }, token);
       await atualizarFavoritos();
     } catch (error) {
@@ -150,7 +171,8 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
     if (allRestaurants.length > 0) {
       const slicedRestaurants = allRestaurants.slice(0, sliderValue);
       setRestaurants(slicedRestaurants);
-      localStorage.setItem('sliderValue', sliderValue.toString());
+      localStorage.setItem('lastRestaurants', JSON.stringify(slicedRestaurants));
+      localStorage.setItem('lastSliderValue', sliderValue.toString());
     }
   }, [sliderValue, allRestaurants]);
 
@@ -170,7 +192,7 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
           onChange={(e) => {
             const formattedCep = formatarCep(e.target.value);
             setCep(formattedCep);
-            localStorage.setItem('cep', formattedCep);
+            localStorage.setItem('lastCep', formattedCep);
           }}
           placeholder="Ex: 01001-000"
           className="w-full p-2 border border-gray-300 rounded-md mb-4"
@@ -179,7 +201,7 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
 
         <div className="flex gap-2">
           <button
-            onClick={buscarCoordenadasErestaurantes} // Chama a função de buscar coordenadas do CEP
+            onClick={buscarCoordenadasErestaurantes}
             disabled={isSearching}
             className={`flex-1 p-2 text-white rounded-md transition-colors flex items-center justify-center ${
               isSearching
@@ -306,7 +328,9 @@ const SearchRestaurants: React.FC<SearchRestaurantsProps> = ({ userId, token }) 
             })}
           </div>
         ) : (
-          <p className="text-gray-500 text-center mt-4">Faça uma busca!</p>
+          <p className="text-gray-500 text-center mt-4">
+            {allRestaurants.length > 0 ? 'Ajuste o slider para exibir restaurantes' : 'Faça uma busca!'}
+          </p>
         )}
       </div>
     </div>
